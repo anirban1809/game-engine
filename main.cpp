@@ -1,6 +1,7 @@
-#include <iostream>
+#include "Sandbox/Sandbox.cpp"
 
 int main() {
-  std::cout << "Hello World!" << std::endl;
-  return 0;
+    Sandbox app(800, 800, "Window");
+    app.Run();
+    return 0;
 }
