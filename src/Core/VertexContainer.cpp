@@ -30,6 +30,7 @@ void VertexContainer::Init(float* vertexBuffer, uint32 vertexBufferSize,
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, vertexSize, vertices, GL_STATIC_DRAW);
+    glCullFace(1);
 
     // Step 3: Generate & Bind EBO (Element Buffer Object)
     glGenBuffers(1, &EBO);
@@ -87,15 +88,9 @@ void SetColor(unsigned int colorLocation, const float* colors,
 void VertexContainer::Bind() const { glBindVertexArray(VAO); }
 
 void VertexContainer::Draw(unsigned int shaderProgramId, float* colors) const {
-    unsigned int cp = 0;
-    // set square color
     GLint colorLoc = glGetUniformLocation(shaderProgramId, "color");
-    SetColor(colorLoc, colors, cp);
-    cp += 3;
+    SetColor(colorLoc, colors, 0);
     glDrawElements(GL_TRIANGLES, indexSize, GL_UNSIGNED_INT, 0);
-    SetColor(colorLoc, colors, cp);
-    glDrawElements(GL_TRIANGLES, indexSize, GL_UNSIGNED_INT,
-                   (void*)(6 * sizeof(uint32)));
 }
 
 /**

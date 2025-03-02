@@ -13,21 +13,6 @@ void WavefrontObjLoader::Load(const std::string& filePath) {
     fileContent = buffer.str();
 }
 
-std::tuple<vec3float> WavefrontObjLoader::ParseVertices(
-    const std::string& line) {
-    std::tuple<vec3float> point3d;
-
-    std::istringstream iss(line);
-    std::string prefix;
-    float x, y, z;
-
-    if (iss >> prefix >> x >> y >> z && prefix == "v") {
-        point3d = std::make_tuple(x, y, z);  // Store in vector
-    }
-
-    return point3d;
-}
-
 std::vector<std::string> splitString(const std::string& str, char delimiter) {
     std::vector<std::string> tokens;
     std::stringstream ss(str);
@@ -38,6 +23,17 @@ std::vector<std::string> splitString(const std::string& str, char delimiter) {
     }
 
     return tokens;
+}
+
+std::tuple<vec3float> WavefrontObjLoader::ParseVertices(
+    const std::string& line) {
+    std::tuple<vec3float> point3d;
+
+    std::vector<std::string> values = splitString(line, ' ');
+    point3d = std::make_tuple(atof(values[1].c_str()), atof(values[2].c_str()),
+                              atof(values[3].c_str()));
+
+    return point3d;
 }
 
 Triangle WavefrontObjLoader::ParseFaces(const std::string& line) {
@@ -87,17 +83,17 @@ VectorTexture WavefrontObjLoader::ParseTextures(const std::string& line) {
     return texture;
 }
 
-std::vector<std::tuple<vec3float>> WavefrontObjLoader::GetVertices() {
+std::vector<std::tuple<vec3float>>& WavefrontObjLoader::GetVertices() {
     return vertices;
 }
 
-std::vector<Triangle> WavefrontObjLoader::GetTriangles() { return triangles; }
+std::vector<Triangle>& WavefrontObjLoader::GetTriangles() { return triangles; }
 
-std::vector<VectorTexture> WavefrontObjLoader::GetVectorTextures() {
+std::vector<VectorTexture>& WavefrontObjLoader::GetVectorTextures() {
     return textures;
 }
 
-std::vector<VectorNormal> WavefrontObjLoader::GetVectorNormals() {
+std::vector<VectorNormal>& WavefrontObjLoader::GetVectorNormals() {
     return normals;
 }
 
@@ -112,18 +108,18 @@ void WavefrontObjLoader::ParseContent() {
         }
 
         // parse vertices
-        if (line.at(0) == 'v') {
+        if (line.substr(0, 2) == "v ") {
             vertices.push_back(ParseVertices(line));
         }
 
         // parse vector normals
-        if (line.substr(0, 1) == "vn") {
-            ParseNormals(line);
+        if (line.substr(0, 2) == "vn") {
+            normals.push_back(ParseNormals(line));
         }
 
         // parse vector textures
-        if (line.substr(0, 1) == "vt") {
-            normals.push_back(ParseNormals(line));
+        if (line.substr(0, 2) == "vt") {
+            textures.push_back(ParseTextures(line));
         }
 
         if (line.at(0) == 'f') {

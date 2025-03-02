@@ -5,6 +5,8 @@
 #include "../vendor/glew-2.2.0/include/GL/glew.h"
 #include "../include/Loaders/Wavefront.h"
 #include "Core/Types.h"
+#include "Transformers/Scale.h"
+#include <algorithm>
 #include <cstdio>
 #include <iostream>
 #include <tuple>
@@ -28,39 +30,45 @@ class Sandbox : public Application {
             "/Users/anirban/Documents/Code/engine/Sandbox/models/box2.obj");
         obj->ParseContent();
 
+        Transformers::Scale::Apply(obj, 0.25);
+
         std::vector<std::tuple<vec3float>> vertices = obj->GetVertices();
 
-        std::vector<std::pair<float, float>> projectedPoints;
-
-        for (auto &[x, y, z] : vertices) {
-            if (z == 0) {
-                z = 0.01f;
+        float xmin = std::get<0>((vertices)[0]);
+        float ymin = std::get<1>((vertices)[0]);
+        float xmax = std::get<0>((vertices)[0]);
+        float ymax = std::get<1>((vertices)[0]);
+        // First, project the points
+        for (const auto &[x, y, z] : vertices) {
+            if (x < xmin) {
+                xmin = x;
             }
-            // Perspective projection formula
-            float xProjected = (10.5f * x) / z;
-            float yProjected = (10.5f * y) / z;
-            projectedPoints.emplace_back(xProjected, yProjected);
+            if (x > xmax) {
+                xmax = x;
+            }
+            if (y < ymin) {
+                ymin = y;
+            }
+            if (y > ymax) {
+                ymax = y;
+            }
         }
 
-        stage.reserve(projectedPoints.size() *
-                      2);  // Reserve space for efficiency
+        for (const auto &[x, y, z] : vertices) {
+            float normX = (2.0f * (x - xmin) / (xmax - xmin)) - 1.0f;
+            float normY = (2.0f * (y - ymin) / (ymax - ymin)) - 1.0f;
 
-        for (const auto &[x, y] : projectedPoints) {
-            stage.push_back(x);
-            stage.push_back(y);
+            stage.push_back(normX);
+            stage.push_back(normY);
         }
 
         std::vector<Triangle> triangles = obj->GetTriangles();
 
-        std::vector<uint32> inds;
-
         for (int i = 0; i < triangles.size(); i++) {
-            inds.push_back(std::get<0>(triangles[i]).v);
-            inds.push_back(std::get<1>(triangles[i]).v);
-            inds.push_back(std::get<2>(triangles[i]).v);
+            indices.push_back(std::get<0>((triangles)[i]).v - 1);
+            indices.push_back(std::get<1>((triangles)[i]).v - 1);
+            indices.push_back(std::get<2>((triangles)[i]).v - 1);
         }
-
-        indices = inds;
 
         Logger::Log(LOG_INFO, "Initializing Application");
         Logger::Log(LOG_INFO, "Engine Version: 0.0.2 (Feb '25)");
@@ -84,12 +92,12 @@ class Sandbox : public Application {
         //     0.3f, 0.8f,  // Top-left
         // };
 
-        // Define One Index Buffer for Both Squares
-        // unsigned int indices[] = {// First Square
-        //                           0, 1, 2, 2, 3, 0,
+        // // Define One Index Buffer for Both Squares
+        // indices = {// First Square
+        //            0, 1, 2, 2, 3, 0,
 
-        //                           // Second Square
-        //                           4, 5, 6, 6, 7, 4};
+        //            // Second Square
+        //            4, 5, 6, 6, 7, 4};
 
         container = new VertexContainer();
         container->Init(stage.data(), stage.size() * sizeof(float),
@@ -103,10 +111,10 @@ class Sandbox : public Application {
                                       stage.size() * sizeof(float));
 
         unsigned int shaderId = shader->GetProgramId();
-        float colors[] = {0.0f, 1.0f, 0.6f, 0.0f, 0.0f, 1.0f};
+        std::vector<float> colors = {0.0f, 1.0f, 0.6f};
 
         container->Bind();
-        container->Draw(shaderId, colors);
+        container->Draw(shaderId, colors.data());
 
         shader->Use();
         container->Unbind();

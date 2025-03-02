@@ -36,10 +36,10 @@ class WavefrontObjLoader {
    public:
     void Load(const std::string& filePath);
     void ParseContent();
-    std::vector<std::tuple<vec3float>> GetVertices();
-    std::vector<Triangle> GetTriangles();
-    std::vector<VectorTexture> GetVectorTextures();
-    std::vector<VectorNormal> GetVectorNormals();
+    std::vector<std::tuple<vec3float>>& GetVertices();
+    std::vector<Triangle>& GetTriangles();
+    std::vector<VectorTexture>& GetVectorTextures();
+    std::vector<VectorNormal>& GetVectorNormals();
 
    private:
     std::string fileContent;
