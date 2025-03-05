@@ -2,12 +2,13 @@
 #define __VERTEX_H__
 
 #include "Types.h"
+#include <vector>
 class VertexContainer {
    public:
     ~VertexContainer();
 
-    void Init(float *vertexBuffer, uint32 vertexBufferSize, uint32 *indexBuffer,
-              uint32 indexBufferSize);
+    void Init(std::vector<float> vertexBuffer, uint32 vertexBufferSize,
+              std::vector<uint32> indexBuffer, uint32 indexBufferSize);
 
     void UpdateVertexBuffer(float *newVertices, uint32 size);
 

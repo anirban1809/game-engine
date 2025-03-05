@@ -9,8 +9,10 @@
 #include <algorithm>
 #include <cstdio>
 #include <iostream>
+#include <string>
 #include <tuple>
 #include <vector>
+#include <unistd.h>
 
 class Sandbox : public Application {
    public:
@@ -27,47 +29,26 @@ class Sandbox : public Application {
     void OnInit() {
         obj = new WavefrontObjLoader();
         obj->Load(
-            "/Users/anirban/Documents/Code/engine/Sandbox/models/box2.obj");
+            "/Users/anirban/Documents/Code/game-engine/Sandbox/models/"
+            "box2.obj");
         obj->ParseContent();
-
-        Transformers::Scale::Apply(obj, 0.25);
 
         std::vector<std::tuple<vec3float>> vertices = obj->GetVertices();
 
-        float xmin = std::get<0>((vertices)[0]);
-        float ymin = std::get<1>((vertices)[0]);
-        float xmax = std::get<0>((vertices)[0]);
-        float ymax = std::get<1>((vertices)[0]);
-        // First, project the points
         for (const auto &[x, y, z] : vertices) {
-            if (x < xmin) {
-                xmin = x;
-            }
-            if (x > xmax) {
-                xmax = x;
-            }
-            if (y < ymin) {
-                ymin = y;
-            }
-            if (y > ymax) {
-                ymax = y;
-            }
-        }
+            // float normX = (2.0f * (x - xmin) / (xmax - xmin)) - 1.0f;
+            // float normY = (2.0f * (y - ymin) / (ymax - ymin)) - 1.0f;
 
-        for (const auto &[x, y, z] : vertices) {
-            float normX = (2.0f * (x - xmin) / (xmax - xmin)) - 1.0f;
-            float normY = (2.0f * (y - ymin) / (ymax - ymin)) - 1.0f;
-
-            stage.push_back(normX);
-            stage.push_back(normY);
+            stage.push_back(x * 0.3);
+            stage.push_back(y * 0.3);
         }
 
         std::vector<Triangle> triangles = obj->GetTriangles();
 
         for (int i = 0; i < triangles.size(); i++) {
-            indices.push_back(std::get<0>((triangles)[i]).v - 1);
-            indices.push_back(std::get<1>((triangles)[i]).v - 1);
-            indices.push_back(std::get<2>((triangles)[i]).v - 1);
+            indices.push_back(std::get<0>((triangles)[i]).v);
+            indices.push_back(std::get<1>((triangles)[i]).v);
+            indices.push_back(std::get<2>((triangles)[i]).v);
         }
 
         Logger::Log(LOG_INFO, "Initializing Application");
@@ -76,39 +57,21 @@ class Sandbox : public Application {
         shader = new Shader("./src/Shaders/vertex_shader.glsl",
                             "./src/Shaders/fragment_shader.glsl");
 
-        // Define Two Squares in a Single Vertex Buffer (2D Positions)
+        printf("Stage Size: %lu\n", stage.size() / 2);
+        printf("vertices size: %lu\n", vertices.size());
 
-        // stage = {
-        //     // First Square (Left)
-        //     0.0f, 0.0f,  // Bottom-left
-        //     0.3f, 0.0f,  // Bottom-right
-        //     0.3f, 0.3f,  // Top-right
-        //     0.0f, 0.3f,  // Top-left
-
-        //     // Second Square (Right)
-        //     0.3f, 0.3f,  // Bottom-left
-        //     0.8f, 0.3f,  // Bottom-right
-        //     0.8f, 0.8f,  // Top-right
-        //     0.3f, 0.8f,  // Top-left
-        // };
-
-        // // Define One Index Buffer for Both Squares
-        // indices = {// First Square
-        //            0, 1, 2, 2, 3, 0,
-
-        //            // Second Square
-        //            4, 5, 6, 6, 7, 4};
+        // print size of index
+        printf("Index Size: %lu\n", indices.size());
 
         container = new VertexContainer();
-        container->Init(stage.data(), stage.size() * sizeof(float),
-                        indices.data(), indices.size() * sizeof(indices));
+        container->Init(stage, stage.size(), indices, indices.size());
         container->Bind();
     }
 
     void OnRender() {
         // vertices[0] += 1.0f;
-        container->UpdateVertexBuffer(stage.data(),
-                                      stage.size() * sizeof(float));
+        // container->UpdateVertexBuffer(stage.data(),
+        //                               stage.size() * sizeof(float));
 
         unsigned int shaderId = shader->GetProgramId();
         std::vector<float> colors = {0.0f, 1.0f, 0.6f};

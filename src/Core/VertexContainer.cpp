@@ -16,32 +16,42 @@
 #include <iostream>
 #include <vector>
 
-void VertexContainer::Init(float* vertexBuffer, uint32 vertexBufferSize,
-                           uint32* indexBuffer, uint32 indexBufferSize) {
-    vertices = vertexBuffer;
-    indices = indexBuffer;
+void VertexContainer::Init(std::vector<float> vertexBuffer,
+                           uint32 vertexBufferSize,
+                           std::vector<uint32> indexBuffer,
+                           uint32 indexBufferSize) {
+    // Assume vertexBufferSize is the number of floats (each vertex has 2
+    // floats) and indexBufferSize is the number of indices.
+    vertices = vertexBuffer.data();
+    indices = indexBuffer.data();
 
-    vertexSize = vertexBufferSize;
-    indexSize = indexBufferSize;
+    vertexSize = vertexBufferSize;  // Total number of floats in vertex buffer.
+    indexSize = indexBufferSize;    // Total number of indices.
 
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
-    // Step 2: Generate & Bind VBO (Vertex Buffer Object)
+
+    // Generate and bind VBO (Vertex Buffer Object)
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, vertexSize, vertices, GL_STATIC_DRAW);
-    glCullFace(1);
+    // Upload vertex data: vertexSize floats * size of float (in bytes)
+    glBufferData(GL_ARRAY_BUFFER, vertexSize * sizeof(float), vertices,
+                 GL_STATIC_DRAW);
 
-    // Step 3: Generate & Bind EBO (Element Buffer Object)
+    // Generate and bind EBO (Element Buffer Object)
     glGenBuffers(1, &EBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexSize, indices, GL_STATIC_DRAW);
+    // Upload index data: indexSize indices * size of uint32 (in bytes)
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexSize * sizeof(uint32), indices,
+                 GL_STATIC_DRAW);
 
+    // Setup the vertex attribute pointer:
+    // We assume each vertex is (x,y) -> 2 floats per vertex.
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float),
                           (void*)0);
     glEnableVertexAttribArray(0);
 
-    // Step 5: Unbind VAO to prevent accidental modifications
+    // Unbind the VAO to prevent accidental modifications
     glBindVertexArray(0);
 }
 
@@ -57,47 +67,33 @@ VertexContainer::~VertexContainer() {
 }
 
 void VertexContainer::UpdateVertexBuffer(float* newVertices, uint32 size) {
+    // Verify the new data has the same count as the original.
     if (size != vertexSize) {
         std::cerr << "Error: New vertex data size does not match existing size."
                   << std::endl;
         return;
     }
 
-    // Update stored vertices
+    // Update stored pointer (assuming external memory management)
     vertices = newVertices;
 
-    // Update VBO on the GPU
+    // Update VBO on the GPU with the new vertex data.
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, size, vertices);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, vertexSize * sizeof(float), vertices);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
-
-/**
- * @brief Binds the VAO and renders the object using indexed drawing.
- *
- * Uses `glDrawElements` to render the object based on the provided index
- * buffer.
- */
-
-void SetColor(unsigned int colorLocation, const float* colors,
-              unsigned int colorPointer) {
-    glUniform3f(colorLocation, colors[colorPointer], colors[colorPointer + 1],
-                colors[colorPointer + 2]);
 }
 
 void VertexContainer::Bind() const { glBindVertexArray(VAO); }
 
 void VertexContainer::Draw(unsigned int shaderProgramId, float* colors) const {
-    GLint colorLoc = glGetUniformLocation(shaderProgramId, "color");
-    SetColor(colorLoc, colors, 0);
+    // Optionally, set a uniform color:
+    // GLint colorLoc = glGetUniformLocation(shaderProgramId, "color");
+    // glUniform3f(colorLoc, colors[0], colors[1], colors[2]);
+
+    // Draw using glDrawElements. The second parameter is the number of indices.
     glDrawElements(GL_TRIANGLES, indexSize, GL_UNSIGNED_INT, 0);
 }
 
-/**
- * @brief Unbinds the VAO and VBO.
- *
- * This prevents unintended modifications to the currently active OpenGL state.
- */
 void VertexContainer::Unbind() const {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);

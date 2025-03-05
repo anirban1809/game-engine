@@ -30,8 +30,9 @@ std::tuple<vec3float> WavefrontObjLoader::ParseVertices(
     std::tuple<vec3float> point3d;
 
     std::vector<std::string> values = splitString(line, ' ');
-    point3d = std::make_tuple(atof(values[1].c_str()), atof(values[2].c_str()),
-                              atof(values[3].c_str()));
+    point3d = std::make_tuple(std::stof(values[1].c_str()),
+                              std::stof(values[2].c_str()),
+                              std::stof(values[3].c_str()));
 
     return point3d;
 }
@@ -44,9 +45,9 @@ Triangle WavefrontObjLoader::ParseFaces(const std::string& line) {
         std::vector<std::string> faceValue = splitString(values[i], '/');
 
         FaceVertex faceData = {
-            .v = (uint32)atoi(faceValue[0].c_str()),
-            .vt = (uint32)atoi(faceValue[1].c_str()),
-            .vn = (uint32)atoi(faceValue[2].c_str()),
+            .v = (uint32)std::stoi(faceValue[0].c_str()) - 1,
+            .vt = (uint32)std::stoi(faceValue[1].c_str()) - 1,
+            .vn = (uint32)std::stoi(faceValue[2].c_str()) - 1,
         };
 
         faceVertices.push_back(faceData);
