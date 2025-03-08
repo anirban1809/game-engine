@@ -13,6 +13,7 @@
 #include <tuple>
 #include <vector>
 #include <unistd.h>
+#include "../vendor/glm/glm.hpp"
 
 class Sandbox : public Application {
    public:
@@ -25,22 +26,18 @@ class Sandbox : public Application {
     WavefrontObjLoader *obj;
     std::vector<float> stage;
     std::vector<uint32> indices;
+    float yCam = 0;
 
     void OnInit() {
         obj = new WavefrontObjLoader();
-        obj->Load(
-            "/Users/anirban/Documents/Code/game-engine/Sandbox/models/"
-            "box2.obj");
+        obj->LoadFile(
+            "/Users/anirban/Documents/Code/engine/Sandbox/models/box2.obj");
         obj->ParseContent();
 
-        std::vector<std::tuple<vec3float>> vertices = obj->GetVertices();
+        std::vector<glm::vec3> vertices;
 
-        for (const auto &[x, y, z] : vertices) {
-            // float normX = (2.0f * (x - xmin) / (xmax - xmin)) - 1.0f;
-            // float normY = (2.0f * (y - ymin) / (ymax - ymin)) - 1.0f;
-
-            stage.push_back(x * 0.3);
-            stage.push_back(y * 0.3);
+        for (const auto &[x, y, z] : obj->GetVertices()) {
+            vertices.emplace_back(x * 0.105, y * 0.105, z * 0.105);
         }
 
         std::vector<Triangle> triangles = obj->GetTriangles();
@@ -57,28 +54,35 @@ class Sandbox : public Application {
         shader = new Shader("./src/Shaders/vertex_shader.glsl",
                             "./src/Shaders/fragment_shader.glsl");
 
-        printf("Stage Size: %lu\n", stage.size() / 2);
-        printf("vertices size: %lu\n", vertices.size());
-
-        // print size of index
-        printf("Index Size: %lu\n", indices.size());
-
         container = new VertexContainer();
-        container->Init(stage, stage.size(), indices, indices.size());
+        container->Init(vertices, vertices.size(), indices, indices.size());
         container->Bind();
+
+        camera.SetCameraProjection(90.0f, 1.0f, 0.1f, 100.0f);
+        camera.SetCameraPosition(0.7f, 2.0f, 1.0f);
+        camera.SetCameraLook(0.0f, 0.0f, 0.0f);
+        container->AttachCamera(&camera);
+
+        /**
+        glm::mat4 projection =
+        glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 100.0f);
+        glm::mat4 view =
+        glm::lookAt(glm::vec3(0.7f, yCam, 1.0f),  // Camera position
+        glm::vec3(0.0f, 0.0f, 0.0f),  // Look at origin
+        glm::vec3(0.0f, 1.0f, 0.0f)   // Up vector
+        );
+
+        *
+        */
     }
 
     void OnRender() {
-        // vertices[0] += 1.0f;
-        // container->UpdateVertexBuffer(stage.data(),
-        //                               stage.size() * sizeof(float));
-
         unsigned int shaderId = shader->GetProgramId();
-        std::vector<float> colors = {0.0f, 1.0f, 0.6f};
+
+        camera.TranslateY(0.025f);
 
         container->Bind();
-        container->Draw(shaderId, colors.data());
-
+        container->Draw(shaderId);
         shader->Use();
         container->Unbind();
     }

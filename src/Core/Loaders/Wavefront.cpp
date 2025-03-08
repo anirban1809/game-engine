@@ -6,7 +6,7 @@
 #include <string>
 #include <tuple>
 
-void WavefrontObjLoader::Load(const std::string& filePath) {
+void WavefrontObjLoader::LoadFile(const std::string& filePath) {
     std::ifstream file(filePath);
     std::stringstream buffer;
     buffer << file.rdbuf();
@@ -44,11 +44,19 @@ Triangle WavefrontObjLoader::ParseFaces(const std::string& line) {
     for (int i = 1; i < values.size(); i++) {
         std::vector<std::string> faceValue = splitString(values[i], '/');
 
-        FaceVertex faceData = {
-            .v = (uint32)std::stoi(faceValue[0].c_str()) - 1,
-            .vt = (uint32)std::stoi(faceValue[1].c_str()) - 1,
-            .vn = (uint32)std::stoi(faceValue[2].c_str()) - 1,
-        };
+        uint32 vt, vn = 0;
+
+        if (faceValue[1] != "") {
+            vt = (uint32)std::stoi(faceValue[1].c_str()) - 1;
+        }
+
+        if (faceValue[2] != "") {
+            vn = (uint32)std::stoi(faceValue[2].c_str()) - 1;
+        }
+
+        FaceVertex faceData = {.v = (uint32)std::stoi(faceValue[0].c_str()) - 1,
+                               .vt = vt,
+                               .vn = vn};
 
         faceVertices.push_back(faceData);
     }

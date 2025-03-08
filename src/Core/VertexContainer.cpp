@@ -15,18 +15,20 @@
 #include <cstdio>
 #include <iostream>
 #include <vector>
+#include "../../vendor/glm/glm.hpp"
+#include "../../vendor/glm/gtc/matrix_transform.hpp"
+#include "../../vendor/glm/gtc/type_ptr.hpp"
+#include "../../include/Core/Camera.h"
 
-void VertexContainer::Init(std::vector<float> vertexBuffer,
+void VertexContainer::Init(std::vector<glm::vec3>& vertexBuffer,
                            uint32 vertexBufferSize,
-                           std::vector<uint32> indexBuffer,
+                           std::vector<uint32>& indexBuffer,
                            uint32 indexBufferSize) {
-    // Assume vertexBufferSize is the number of floats (each vertex has 2
-    // floats) and indexBufferSize is the number of indices.
     vertices = vertexBuffer.data();
     indices = indexBuffer.data();
 
-    vertexSize = vertexBufferSize;  // Total number of floats in vertex buffer.
-    indexSize = indexBufferSize;    // Total number of indices.
+    vertexSize = vertexBufferSize;
+    indexSize = indexBufferSize;
 
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
@@ -35,7 +37,7 @@ void VertexContainer::Init(std::vector<float> vertexBuffer,
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     // Upload vertex data: vertexSize floats * size of float (in bytes)
-    glBufferData(GL_ARRAY_BUFFER, vertexSize * sizeof(float), vertices,
+    glBufferData(GL_ARRAY_BUFFER, vertexSize * sizeof(glm::vec3), vertices,
                  GL_STATIC_DRAW);
 
     // Generate and bind EBO (Element Buffer Object)
@@ -47,7 +49,7 @@ void VertexContainer::Init(std::vector<float> vertexBuffer,
 
     // Setup the vertex attribute pointer:
     // We assume each vertex is (x,y) -> 2 floats per vertex.
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float),
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3),
                           (void*)0);
     glEnableVertexAttribArray(0);
 
@@ -66,16 +68,10 @@ VertexContainer::~VertexContainer() {
     glDeleteVertexArrays(1, &VAO);  // Delete Vertex Array
 }
 
-void VertexContainer::UpdateVertexBuffer(float* newVertices, uint32 size) {
-    // Verify the new data has the same count as the original.
-    if (size != vertexSize) {
-        std::cerr << "Error: New vertex data size does not match existing size."
-                  << std::endl;
-        return;
-    }
-
+void VertexContainer::UpdateVertexBuffer(
+    const std::vector<glm::vec3>& newVertices, uint32 size) {
     // Update stored pointer (assuming external memory management)
-    vertices = newVertices;
+    vertices = newVertices.data();
 
     // Update VBO on the GPU with the new vertex data.
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -85,12 +81,19 @@ void VertexContainer::UpdateVertexBuffer(float* newVertices, uint32 size) {
 
 void VertexContainer::Bind() const { glBindVertexArray(VAO); }
 
-void VertexContainer::Draw(unsigned int shaderProgramId, float* colors) const {
-    // Optionally, set a uniform color:
-    // GLint colorLoc = glGetUniformLocation(shaderProgramId, "color");
-    // glUniform3f(colorLoc, colors[0], colors[1], colors[2]);
+void VertexContainer::AttachCamera(Camera* cam) { camera = cam; }
 
-    // Draw using glDrawElements. The second parameter is the number of indices.
+void VertexContainer::Draw(unsigned int shaderProgramId) {
+    glUseProgram(shaderProgramId);  // Activate Shader Program
+
+    glUniform3f(glGetUniformLocation(shaderProgramId, "color"), 1.0f, 0.3f,
+                0.0f);
+    // Send matrices to the shader
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgramId, "projection"), 1,
+                       GL_FALSE, glm::value_ptr(camera->GetProjection()));
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgramId, "view"), 1,
+                       GL_FALSE, glm::value_ptr(camera->GetView()));
+
     glDrawElements(GL_TRIANGLES, indexSize, GL_UNSIGNED_INT, 0);
 }
 
