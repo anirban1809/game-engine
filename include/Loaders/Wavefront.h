@@ -7,6 +7,7 @@
 #include <vector>
 
 #define vec3float float, float, float
+#define vec2float float, float
 #define Triangle std::tuple<FaceVertex, FaceVertex, FaceVertex>
 
 typedef struct {
@@ -40,6 +41,7 @@ class WavefrontObjLoader {
     std::vector<Triangle>& GetTriangles();
     std::vector<VectorTexture>& GetVectorTextures();
     std::vector<VectorNormal>& GetVectorNormals();
+    std::vector<std::tuple<vec3float, vec2float>> GetVerticesAndTextures();
 
    private:
     std::string fileContent;

@@ -4,7 +4,15 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <sys/cdefs.h>
 #include <tuple>
+
+#define __GetVertexAndTexture(vertex)                     \
+    std::make_tuple(std::get<0>(GetVertices()[vertex.v]), \
+                    std::get<1>(GetVertices()[vertex.v]), \
+                    std::get<2>(GetVertices()[vertex.v]), \
+                    (GetVectorTextures()[vertex.vt]).u,   \
+                    (GetVectorTextures()[vertex.vt]).v)
 
 void WavefrontObjLoader::LoadFile(const std::string& filePath) {
     std::ifstream file(filePath);
@@ -104,6 +112,24 @@ std::vector<VectorTexture>& WavefrontObjLoader::GetVectorTextures() {
 
 std::vector<VectorNormal>& WavefrontObjLoader::GetVectorNormals() {
     return normals;
+}
+
+std::vector<std::tuple<vec3float, vec2float>>
+WavefrontObjLoader::GetVerticesAndTextures() {
+    std::tuple<vec3float, vec2float> result[GetVertices().size()];
+    for (auto const& face : GetTriangles()) {
+        result[std::get<0>(face).v] =
+            (__GetVertexAndTexture(std::get<0>(face)));
+        result[std::get<1>(face).v] =
+            (__GetVertexAndTexture(std::get<1>(face)));
+        result[std::get<2>(face).v] =
+            (__GetVertexAndTexture(std::get<2>(face)));
+    }
+
+    std::vector<std::tuple<vec3float, vec2float>> output(
+        result, result + sizeof(result) / sizeof(result[0]));
+
+    return output;
 }
 
 void WavefrontObjLoader::ParseContent() {

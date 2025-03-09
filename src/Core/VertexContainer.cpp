@@ -20,8 +20,9 @@
 #include "../../vendor/glm/gtc/type_ptr.hpp"
 #include "../../include/Core/Camera.h"
 
-void VertexContainer::Init(std::vector<glm::vec3>& vertexBuffer,
-                           std::vector<uint32>& indexBuffer) {
+void VertexContainer::Init(std::vector<float>& vertexBuffer,
+                           std::vector<uint32>& indexBuffer,
+                           uint32 shaderProgramId) {
     vertices = vertexBuffer.data();
     indices = indexBuffer.data();
 
@@ -35,7 +36,7 @@ void VertexContainer::Init(std::vector<glm::vec3>& vertexBuffer,
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     // Upload vertex data: vertexSize floats * size of float (in bytes)
-    glBufferData(GL_ARRAY_BUFFER, vertexSize * sizeof(glm::vec3), vertices,
+    glBufferData(GL_ARRAY_BUFFER, vertexSize * sizeof(float), vertices,
                  GL_STATIC_DRAW);
 
     // Generate and bind EBO (Element Buffer Object)
@@ -47,12 +48,24 @@ void VertexContainer::Init(std::vector<glm::vec3>& vertexBuffer,
 
     // Setup the vertex attribute pointer:
     // We assume each vertex is (x,y) -> 2 floats per vertex.
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(glm::vec3),
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
                           (void*)0);
     glEnableVertexAttribArray(0);
 
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+                          (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
+
     // Unbind the VAO to prevent accidental modifications
     glBindVertexArray(0);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(
+        GL_TEXTURE_2D,
+        texture->LoadTexture(
+            "/Users/anirban/Documents/Code/engine/Sandbox/models/texture.png"));
+    glUniform1i(glGetUniformLocation(shaderProgramId, "texture1"), 0);
+    glEnable(GL_DEPTH_TEST);
 }
 
 /**
@@ -66,8 +79,8 @@ VertexContainer::~VertexContainer() {
     glDeleteVertexArrays(1, &VAO);  // Delete Vertex Array
 }
 
-void VertexContainer::UpdateVertexBuffer(
-    const std::vector<glm::vec3>& newVertices, uint32 size) {
+void VertexContainer::UpdateVertexBuffer(const std::vector<float>& newVertices,
+                                         uint32 size) {
     // Update stored pointer (assuming external memory management)
     vertices = newVertices.data();
 
@@ -84,8 +97,8 @@ void VertexContainer::AttachCamera(Camera* cam) { camera = cam; }
 void VertexContainer::Draw(uint32 shaderProgramId) {
     glUseProgram(shaderProgramId);  // Activate Shader Program
 
-    glUniform3f(glGetUniformLocation(shaderProgramId, "color"), 1.0f, 0.3f,
-                0.0f);
+    glUniform3f(glGetUniformLocation(shaderProgramId, "color"), 0.2f, 0.3f,
+                0.3f);
     // Send matrices to the shader
     glUniformMatrix4fv(glGetUniformLocation(shaderProgramId, "projection"), 1,
                        GL_FALSE, glm::value_ptr(camera->GetProjection()));
@@ -96,6 +109,7 @@ void VertexContainer::Draw(uint32 shaderProgramId) {
 }
 
 void VertexContainer::Unbind() const {
+    delete texture;
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 }

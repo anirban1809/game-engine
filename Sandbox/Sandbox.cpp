@@ -33,10 +33,13 @@ class Sandbox : public Application {
             "/Users/anirban/Documents/Code/engine/Sandbox/models/box2.obj");
         obj->ParseContent();
 
-        std::vector<glm::vec3> vertices;
-
-        for (const auto &[x, y, z] : obj->GetVertices()) {
-            vertices.emplace_back(x, y, z);
+        std::vector<float> vertices;
+        for (const auto &[x, y, z, u, v] : obj->GetVerticesAndTextures()) {
+            vertices.push_back(x);
+            vertices.push_back(y);
+            vertices.push_back(z);
+            vertices.push_back(u);
+            vertices.push_back(v);
         }
 
         std::vector<Triangle> triangles = obj->GetTriangles();
@@ -54,10 +57,10 @@ class Sandbox : public Application {
                             "./src/Shaders/fragment_shader.glsl");
 
         container = new VertexContainer();
-        container->Init(vertices, indices);
+        container->Init(vertices, indices, shader->GetProgramId());
         container->Bind();
 
-        camera.SetCameraProjection(90.0f, 1.0f, 0.0f, 1000.0f);
+        camera.SetCameraProjection(45.0f, 1.0f, 0.1f, 1000.0f);
         camera.SetCameraPosition(0.0f, 0.0f, 1.0f);
         camera.SetCameraLook(0.0f, 0.0f, 0.0f);
         container->AttachCamera(&camera);
@@ -82,7 +85,6 @@ class Sandbox : public Application {
     void OnRender() {
         container->Bind();
         container->Draw(shader->GetProgramId());
-        shader->Use();
         container->Unbind();
     }
 };
