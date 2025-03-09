@@ -16,6 +16,7 @@ class Application {
     virtual void OnInit(){};    // To be overridden for custom initialization
     virtual void OnUpdate(){};  // Override for updating logic
     virtual void OnRender(){};  // Override for custom rendering
+    virtual void OnKeyPressed(int key) {}
     Camera camera;
 
    private:

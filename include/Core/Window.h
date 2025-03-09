@@ -2,18 +2,26 @@
 #define __WINDOW_H__
 
 #include "../vendor/glfw-3.4.bin.MACOS/include/GLFW/glfw3.h"
+#include <functional>
 
 class Window {
-public:
-  Window(int width, int height, const char *title);
-  ~Window();
+   public:
+    using KeyCallback = std::function<void(int key, int action)>;
 
-  bool ShouldClose() const;
-  void PollEvents();
-  void SwapBuffers();
+    Window(int width, int height, const char *title);
+    ~Window();
 
-private:
-  GLFWwindow *window;
+    bool ShouldClose() const;
+    void PollEvents();
+    void SwapBuffers();
+
+    void SetKeyCallback(KeyCallback callback);
+
+   private:
+    GLFWwindow *window;
+    static void KeyCallbackInternal(GLFWwindow *window, int key, int scancode,
+                                    int action, int mods);
+    KeyCallback keyCallback;
 };
 
-#endif // __WINDOW_H__
+#endif  // __WINDOW_H__

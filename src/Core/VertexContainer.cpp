@@ -21,14 +21,12 @@
 #include "../../include/Core/Camera.h"
 
 void VertexContainer::Init(std::vector<glm::vec3>& vertexBuffer,
-                           uint32 vertexBufferSize,
-                           std::vector<uint32>& indexBuffer,
-                           uint32 indexBufferSize) {
+                           std::vector<uint32>& indexBuffer) {
     vertices = vertexBuffer.data();
     indices = indexBuffer.data();
 
-    vertexSize = vertexBufferSize;
-    indexSize = indexBufferSize;
+    vertexSize = vertexBuffer.size();
+    indexSize = indexBuffer.size();
 
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
@@ -83,7 +81,7 @@ void VertexContainer::Bind() const { glBindVertexArray(VAO); }
 
 void VertexContainer::AttachCamera(Camera* cam) { camera = cam; }
 
-void VertexContainer::Draw(unsigned int shaderProgramId) {
+void VertexContainer::Draw(uint32 shaderProgramId) {
     glUseProgram(shaderProgramId);  // Activate Shader Program
 
     glUniform3f(glGetUniformLocation(shaderProgramId, "color"), 1.0f, 0.3f,

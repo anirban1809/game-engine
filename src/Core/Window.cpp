@@ -1,7 +1,8 @@
 #include "../../include/Core/Window.h"
+#include "GLFW/glfw3.h"
 #include <iostream>
 
-Window::Window(int width, int height, const char *title) {
+Window::Window(int width, int height, const char* title) {
     if (!glfwInit()) {
         std::cerr << "Failed to initialize GLFW" << std::endl;
         return;
@@ -19,6 +20,8 @@ Window::Window(int width, int height, const char *title) {
     }
 
     glfwMakeContextCurrent(window);
+    glfwSetWindowUserPointer(window, this);
+    glfwSetKeyCallback(window, KeyCallbackInternal);
 }
 
 Window::~Window() {
@@ -31,3 +34,19 @@ bool Window::ShouldClose() const { return glfwWindowShouldClose(window); }
 void Window::PollEvents() { glfwPollEvents(); }
 
 void Window::SwapBuffers() { glfwSwapBuffers(window); }
+
+void Window::SetKeyCallback(KeyCallback callback) { keyCallback = callback; }
+
+void Window::KeyCallbackInternal(GLFWwindow* window, int key, int scancode,
+                                 int action, int mods) {
+    Window* win = static_cast<Window*>(glfwGetWindowUserPointer(window));
+    if (win) {
+        if (win->keyCallback) {
+            win->keyCallback(key, action);
+        } else {
+            std::cout << "Key Callback is NOT set!" << std::endl;
+        }
+    } else {
+        std::cout << "Window pointer is NULL!" << std::endl;
+    }
+}

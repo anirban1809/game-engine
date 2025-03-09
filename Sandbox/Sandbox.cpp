@@ -26,7 +26,6 @@ class Sandbox : public Application {
     WavefrontObjLoader *obj;
     std::vector<float> stage;
     std::vector<uint32> indices;
-    float yCam = 0;
 
     void OnInit() {
         obj = new WavefrontObjLoader();
@@ -37,7 +36,7 @@ class Sandbox : public Application {
         std::vector<glm::vec3> vertices;
 
         for (const auto &[x, y, z] : obj->GetVertices()) {
-            vertices.emplace_back(x * 0.105, y * 0.105, z * 0.105);
+            vertices.emplace_back(x, y, z);
         }
 
         std::vector<Triangle> triangles = obj->GetTriangles();
@@ -55,34 +54,34 @@ class Sandbox : public Application {
                             "./src/Shaders/fragment_shader.glsl");
 
         container = new VertexContainer();
-        container->Init(vertices, vertices.size(), indices, indices.size());
+        container->Init(vertices, indices);
         container->Bind();
 
-        camera.SetCameraProjection(90.0f, 1.0f, 0.1f, 100.0f);
-        camera.SetCameraPosition(0.7f, 2.0f, 1.0f);
+        camera.SetCameraProjection(90.0f, 1.0f, 0.0f, 1000.0f);
+        camera.SetCameraPosition(0.0f, 0.0f, 1.0f);
         camera.SetCameraLook(0.0f, 0.0f, 0.0f);
         container->AttachCamera(&camera);
+    }
 
-        /**
-        glm::mat4 projection =
-        glm::perspective(glm::radians(90.0f), 1.0f, 0.1f, 100.0f);
-        glm::mat4 view =
-        glm::lookAt(glm::vec3(0.7f, yCam, 1.0f),  // Camera position
-        glm::vec3(0.0f, 0.0f, 0.0f),  // Look at origin
-        glm::vec3(0.0f, 1.0f, 0.0f)   // Up vector
-        );
+    void OnKeyPressed(int key) {
+        if (key == GLFW_KEY_UP) {
+            camera.TranslateZ(-0.25f);
+        }
+        if (key == GLFW_KEY_DOWN) {
+            camera.TranslateZ(0.25f);
+        }
 
-        *
-        */
+        if (key == GLFW_KEY_LEFT) {
+            camera.TranslateX(-0.25f);
+        }
+        if (key == GLFW_KEY_RIGHT) {
+            camera.TranslateX(0.25f);
+        }
     }
 
     void OnRender() {
-        unsigned int shaderId = shader->GetProgramId();
-
-        camera.TranslateY(0.025f);
-
         container->Bind();
-        container->Draw(shaderId);
+        container->Draw(shader->GetProgramId());
         shader->Use();
         container->Unbind();
     }

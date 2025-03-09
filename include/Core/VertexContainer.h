@@ -9,8 +9,8 @@ class VertexContainer {
    public:
     ~VertexContainer();
 
-    void Init(std::vector<glm::vec3> &vertexBuffer, uint32 vertexBufferSize,
-              std::vector<uint32> &indexBuffer, uint32 indexBufferSize);
+    void Init(std::vector<glm::vec3> &vertexBuffer,
+              std::vector<uint32> &indexBuffer);
 
     void UpdateVertexBuffer(const std::vector<glm::vec3> &vertices,
                             uint32 size);

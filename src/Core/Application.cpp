@@ -1,9 +1,17 @@
 #include "../../include/Core/Application.h"
+#include "GLFW/glfw3.h"
 #include <iostream>
 
 Application::Application(int width, int height, const char *title) {
     window = new Window(width, height, title);
     renderer = new Renderer();
+
+    // Set up key event callback
+    window->SetKeyCallback([this](int key, int action) {
+        if (action == GLFW_REPEAT || GLFW_PRESS) {
+            OnKeyPressed(key);  // Call the abstracted method
+        }
+    });
 }
 
 Application::~Application() {
