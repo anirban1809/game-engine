@@ -14,11 +14,11 @@
                     (GetVectorTextures()[vertex.vt]).u,   \
                     (GetVectorTextures()[vertex.vt]).v)
 
-void WavefrontObjLoader::LoadFile(const std::string& filePath) {
+void WavefrontObjLoader::LoadObjectFile(const std::string& filePath) {
     std::ifstream file(filePath);
     std::stringstream buffer;
     buffer << file.rdbuf();
-    fileContent = buffer.str();
+    objectFileContent = buffer.str();
 }
 
 std::vector<std::string> splitString(const std::string& str, char delimiter) {
@@ -132,8 +132,8 @@ WavefrontObjLoader::GetVerticesAndTextures() {
     return output;
 }
 
-void WavefrontObjLoader::ParseContent() {
-    std::istringstream stream(fileContent);
+void WavefrontObjLoader::ParseObjectContent() {
+    std::istringstream stream(objectFileContent);
     std::string line;
 
     while (std::getline(stream, line)) {

@@ -35,8 +35,10 @@ enum class LineType {
 
 class WavefrontObjLoader {
    public:
-    void LoadFile(const std::string& filePath);
-    void ParseContent();
+    void LoadObjectFile(const std::string& filePath);
+    void LoadMaterialFile(const std::string& filePath);
+    void ParseObjectContent();
+    void ParseMaterialContent();
     std::vector<std::tuple<vec3float>>& GetVertices();
     std::vector<Triangle>& GetTriangles();
     std::vector<VectorTexture>& GetVectorTextures();
@@ -44,7 +46,8 @@ class WavefrontObjLoader {
     std::vector<std::tuple<vec3float, vec2float>> GetVerticesAndTextures();
 
    private:
-    std::string fileContent;
+    std::string objectFileContent;
+    std::string materialFileContent;
     std::vector<std::tuple<vec3float>> vertices;
     std::vector<Triangle> triangles;
     std::vector<VectorTexture> textures;

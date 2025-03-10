@@ -8,8 +8,6 @@
 
 #include "../../vendor/stb/stb_image.h"
 
-Texture::Texture() { printf("Texture allocated\n"); }
-
 uint32 Texture::LoadTexture(const std::string& path) {
     printf("Loading texture\n");
     uint32 textureID;

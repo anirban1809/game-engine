@@ -5,6 +5,7 @@
 #include "../vendor/glew-2.2.0/include/GL/glew.h"
 #include "../include/Loaders/Wavefront.h"
 #include "Core/Types.h"
+#include "../include/Loaders/ObjLoader.h"
 #include "Transformers/Scale.h"
 #include <algorithm>
 #include <cstdio>
@@ -29,9 +30,13 @@ class Sandbox : public Application {
 
     void OnInit() {
         obj = new WavefrontObjLoader();
-        obj->LoadFile(
+        obj->LoadObjectFile(
             "/Users/anirban/Documents/Code/engine/Sandbox/models/box2.obj");
-        obj->ParseContent();
+        obj->ParseObjectContent();
+
+        ObjLoader *loader = new ObjLoader();
+        loader->LoadObjectFile(
+            "/Users/anirban/Documents/Code/engine/Sandbox/models/box2.obj");
 
         std::vector<float> vertices;
         for (const auto &[x, y, z, u, v] : obj->GetVerticesAndTextures()) {
@@ -61,7 +66,7 @@ class Sandbox : public Application {
         container->Bind();
 
         camera.SetCameraProjection(45.0f, 1.0f, 0.1f, 1000.0f);
-        camera.SetCameraPosition(0.0f, 0.0f, 1.0f);
+        camera.SetCameraPosition(0.0f, 1.0f, 1.0f);
         camera.SetCameraLook(0.0f, 0.0f, 0.0f);
         container->AttachCamera(&camera);
     }
