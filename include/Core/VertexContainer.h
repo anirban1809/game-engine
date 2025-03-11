@@ -31,6 +31,7 @@ class VertexContainer {
     uint32 indexSize;
     Camera *camera;
     Texture *texture;
+    std::vector<uint32> textures;
 };
 
 #endif  // __VERTEX_H__

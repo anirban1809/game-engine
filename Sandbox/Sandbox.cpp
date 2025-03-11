@@ -38,6 +38,33 @@ class Sandbox : public Application {
         loader->LoadObjectFile(
             "/Users/anirban/Documents/Code/engine/Sandbox/models/box2.obj");
 
+        std::vector<float> allvertices;
+        std::vector<uint32> allIndices;
+
+        for (auto const &object : loader->GetObjects()) {
+            std::vector<float> vertices;
+            for (const auto &[x, y, z, u, v] :
+                 object.GetVerticesAndTextures()) {
+                vertices.push_back(x);
+                vertices.push_back(y);
+                vertices.push_back(z);
+                vertices.push_back(u);
+                vertices.push_back(v);
+            }
+
+            allvertices.insert(allvertices.end(), vertices.begin(),
+                               vertices.end());
+
+            std::vector<uint32> localIndices = object.GetVertexIndices();
+
+            for (int i = 0; i < object.GetVertexIndices().size(); i++) {
+                localIndices[i] = localIndices[i] + object.indexOffset;
+            }
+
+            allIndices.insert(allIndices.end(), localIndices.begin(),
+                              localIndices.end());
+        }
+
         std::vector<float> vertices;
         for (const auto &[x, y, z, u, v] : obj->GetVerticesAndTextures()) {
             vertices.push_back(x);
@@ -62,7 +89,7 @@ class Sandbox : public Application {
                             "./src/Shaders/fragment_shader.glsl");
 
         container = new VertexContainer();
-        container->Init(vertices, indices, shader->GetProgramId());
+        container->Init(allvertices, allIndices, shader->GetProgramId());
         container->Bind();
 
         camera.SetCameraProjection(45.0f, 1.0f, 0.1f, 1000.0f);
@@ -72,19 +99,11 @@ class Sandbox : public Application {
     }
 
     void OnKeyPressed(int key) {
-        if (key == GLFW_KEY_UP) {
-            camera.TranslateZ(-0.25f);
-        }
-        if (key == GLFW_KEY_DOWN) {
-            camera.TranslateZ(0.25f);
-        }
+        if (key == GLFW_KEY_UP) { camera.TranslateZ(-0.25f); }
+        if (key == GLFW_KEY_DOWN) { camera.TranslateZ(0.25f); }
 
-        if (key == GLFW_KEY_LEFT) {
-            camera.TranslateX(-0.25f);
-        }
-        if (key == GLFW_KEY_RIGHT) {
-            camera.TranslateX(0.25f);
-        }
+        if (key == GLFW_KEY_LEFT) { camera.TranslateX(-0.25f); }
+        if (key == GLFW_KEY_RIGHT) { camera.TranslateX(0.25f); }
     }
 
     void OnRender() {

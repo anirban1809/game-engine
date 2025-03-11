@@ -1,4 +1,5 @@
 #include "../../../include/Loaders/ObjLoader.h"
+#include "Core/Types.h"
 #include <sstream>
 #include <string>
 #include <iostream>
@@ -7,22 +8,66 @@
 #include <tuple>
 #include <vector>
 
-#define __reset                          \
-    currentObject.SetVertices(vertices); \
-    currentObject.SetNormals(normals);   \
-    currentObject.SetTextures(textures); \
-    currentObject.SetIndices(indices);   \
-    allObjects.push_back(currentObject); \
-    vertices = {};                       \
-    textures = {};                       \
-    normals = {};                        \
-    indices = {};                        \
+/**code to reset temporary values set during computation reuse as and when
+ * necessary
+ */
+#define __reset_temp_values                          \
+    currentObject.SetVertices(vertices);             \
+    currentObject.SetNormals(normals);               \
+    currentObject.SetTextures(textures);             \
+    currentObject.SetVertexIndices(vertexIndices);   \
+    currentObject.SetTextureIndices(textureIndices); \
+    currentObject.SetNormalIndices(normalIndices);   \
+    currentObject.indexOffset = offset;              \
+    allObjects.push_back(currentObject);             \
+    vertices = {};                                   \
+    textures = {};                                   \
+    normals = {};                                    \
+    vertexIndices = {};                              \
+    textureIndices = {};                             \
+    normalIndices = {};                              \
     objectCreated = false;
 
 void Object::SetVertices(const std::vector<glm::vec3>& v) { vertices = v; }
 void Object::SetTextures(const std::vector<glm::vec2>& t) { texCoords = t; }
 void Object::SetNormals(const std::vector<glm::vec3>& v) { normals = v; }
-void Object::SetIndices(const std::vector<uint32>& v) { indices = v; }
+void Object::SetVertexIndices(const std::vector<uint32>& v) {
+    vertexIndices = v;
+}
+
+void Object::SetTextureIndices(const std::vector<uint32>& v) {
+    textureIndices = v;
+}
+
+void Object::SetNormalIndices(const std::vector<uint32>& v) {
+    normalIndices = v;
+}
+
+std::vector<uint32> Object::GetVertexIndices() const { return vertexIndices; }
+
+std::vector<glm::vec3> Object::GetVertices() { return vertices; }
+std::vector<glm::vec2> Object::GetTextures() { return texCoords; }
+std::vector<glm::vec3> Object::GetNormals() { return normals; }
+
+std::vector<Object> ObjLoader::GetObjects() { return objects; }
+
+std::vector<std::tuple<vec3float, vec2float>> Object::GetVerticesAndTextures()
+    const {
+    std::tuple<vec3float, vec2float> result[vertices.size()];
+
+    for (int i = 0; i < vertexIndices.size(); i++) {
+        uint32 vertexIndexValue = vertexIndices[i];
+        result[vertexIndexValue] = std::make_tuple(
+            vertices[vertexIndexValue][0], vertices[vertexIndexValue][1],
+            vertices[vertexIndexValue][2], texCoords[vertexIndexValue][0],
+            texCoords[vertexIndexValue][1]);
+    }
+
+    std::vector<std::tuple<float, float, float, float, float>> output(
+        result, result + sizeof(result) / sizeof(result[0]));
+
+    return output;
+}
 
 void ObjLoader::LoadObjectFile(const std::string& filename) {
     std::ifstream file(filename);
@@ -39,7 +84,10 @@ void ObjLoader::LoadObjectFile(const std::string& filename) {
     std::vector<glm::vec3> vertices;
     std::vector<glm::vec2> textures;
     std::vector<glm::vec3> normals;
-    std::vector<uint32> indices;
+    std::vector<uint32> vertexIndices;
+    std::vector<uint32> textureIndices;
+    std::vector<uint32> normalIndices;
+    uint32 offset;
     bool objectCreated = false;
 
     uint32 localMaxIndex = 0;
@@ -58,13 +106,11 @@ void ObjLoader::LoadObjectFile(const std::string& filename) {
             } else {
                 globalMaxIndex = localMaxIndex;
                 localMaxIndex = 0;
-                __reset;
+                __reset_temp_values;
             }
         }
 
-        if (type == "#") {
-            continue;
-        }
+        if (type == "#") { continue; }
 
         if (type == "v") {
             float x, y, z;
@@ -90,16 +136,18 @@ void ObjLoader::LoadObjectFile(const std::string& filename) {
                 uint32 v, vt, vn;
                 ss >> v >> slash >> vt >> slash >> vn;
 
-                if (v > localMaxIndex) {
-                    localMaxIndex = v;
-                }
+                if (v > localMaxIndex) { localMaxIndex = v; }
 
-                indices.push_back(v - globalMaxIndex - 1);
+                vertexIndices.push_back(v - globalMaxIndex - 1);
+                textureIndices.push_back(vt - globalMaxIndex - 1);
+                normalIndices.push_back(vn - globalMaxIndex - 1);
             }
+
+            offset = globalMaxIndex;
         }
     }
 
-    __reset;
+    __reset_temp_values;
 
     this->objects = allObjects;
     file.close();

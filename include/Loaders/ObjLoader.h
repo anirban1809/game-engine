@@ -6,6 +6,9 @@
 #include <string>
 #include <vector>
 
+#define vec3float float, float, float
+#define vec2float float, float
+
 enum class LightingMode {
     NO_LIGHTING = 0,
     DIFFUSE_ONLY = 1,
@@ -32,15 +35,28 @@ class Object {
     void SetVertices(const std::vector<glm::vec3>& vertices);
     void SetTextures(const std::vector<glm::vec2>& textures);
     void SetNormals(const std::vector<glm::vec3>& normals);
-    void SetIndices(const std::vector<uint32>& indices);
+    void SetVertexIndices(const std::vector<uint32>& indices);
+    void SetTextureIndices(const std::vector<uint32>& indices);
+    void SetNormalIndices(const std::vector<uint32>& indices);
     void AddMaterial(const Material& material);
+    std::vector<std::tuple<vec3float, vec2float>> GetVerticesAndTextures()
+        const;
+
+    std::vector<glm::vec3> GetVertices();
+    std::vector<glm::vec2> GetTextures();
+    std::vector<glm::vec3> GetNormals();
+    std::vector<uint32> GetVertexIndices() const;
+
     std::string name;
+    uint32 indexOffset;
 
    private:
     std::vector<glm::vec3> vertices;
     std::vector<glm::vec2> texCoords;
     std::vector<glm::vec3> normals;
-    std::vector<uint32> indices;
+    std::vector<uint32> vertexIndices;
+    std::vector<uint32> textureIndices;
+    std::vector<uint32> normalIndices;
     std::vector<Material> materials;
 };
 
@@ -48,6 +64,7 @@ class ObjLoader {
    public:
     void LoadObjectFile(const std::string& filename);
     void LoadMaterialFile();
+    std::vector<Object> GetObjects();
 
    private:
     std::string objectFile;
