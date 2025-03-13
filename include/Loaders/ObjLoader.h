@@ -48,7 +48,9 @@ class Object {
     std::vector<uint32> GetVertexIndices() const;
 
     std::string name;
-    uint32 indexOffset;
+    uint32 vertexIndexOffset;
+    uint32 textureIndexOffset;
+    uint32 normalIndexOffset;
 
    private:
     std::vector<glm::vec3> vertices;

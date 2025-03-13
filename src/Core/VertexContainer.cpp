@@ -61,13 +61,11 @@ void VertexContainer::Init(std::vector<float>& vertexBuffer,
 
     glActiveTexture(GL_TEXTURE0);
 
-    uint32 texture1 = texture->LoadTexture(
-        "/Users/anirban/Documents/Code/engine/Sandbox/models/texture1.png");
-    uint32 texture2 = texture->LoadTexture(
-        "/Users/anirban/Documents/Code/engine/Sandbox/models/texture2.png");
-
-    textures.push_back(texture1);
-    textures.push_back(texture2);
+    for (const auto& obj : objects) {
+        textures.push_back(
+            texture->LoadTexture("/Users/anirban/Documents/Code/engine/Sandbox/"
+                                 "models/texture1.png"));
+    }
 
     // glBindTexture(
     //     GL_TEXTURE_2D,
@@ -102,38 +100,34 @@ void VertexContainer::Bind() const { glBindVertexArray(VAO); }
 
 void VertexContainer::AttachCamera(Camera* cam) { camera = cam; }
 
+void VertexContainer::ApplyTexture(uint32 shaderProgramId, uint32 textureId) {
+    glBindTexture(GL_TEXTURE_2D, textureId);
+    glUniform1i(glGetUniformLocation(shaderProgramId, "texture1"), 0);
+    glEnable(GL_DEPTH_TEST);
+
+    glUseProgram(shaderProgramId);  // Activate Shader Program
+    glUniform3f(glGetUniformLocation(shaderProgramId, "color"), 0.2f, 0.3f,
+                0.3f);
+    // Send matrices to the shader
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgramId, "projection"), 1,
+                       GL_FALSE, glm::value_ptr(camera->GetProjection()));
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgramId, "view"), 1,
+                       GL_FALSE, glm::value_ptr(camera->GetView()));
+}
+
+void VertexContainer::AddObjects(const std::vector<Object>& _objects) {
+    objects = _objects;
+}
+
 void VertexContainer::Draw(uint32 shaderProgramId) {
-    glBindTexture(GL_TEXTURE_2D, textures[0]);
-    glUniform1i(glGetUniformLocation(shaderProgramId, "texture1"), 0);
-    glEnable(GL_DEPTH_TEST);
+    uint32 offset = 0;
+    for (int i = 0; i < objects.size(); i++) {
+        ApplyTexture(shaderProgramId, textures[i]);
+        glDrawElements(GL_TRIANGLES, objects[i].GetVertexIndices().size(),
+                       GL_UNSIGNED_INT, (void*)(offset * sizeof(uint32)));
 
-    glUseProgram(shaderProgramId);  // Activate Shader Program
-    glUniform3f(glGetUniformLocation(shaderProgramId, "color"), 0.2f, 0.3f,
-                0.3f);
-    // Send matrices to the shader
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgramId, "projection"), 1,
-                       GL_FALSE, glm::value_ptr(camera->GetProjection()));
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgramId, "view"), 1,
-                       GL_FALSE, glm::value_ptr(camera->GetView()));
-
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-
-    //------------------------------------------------------
-    glBindTexture(GL_TEXTURE_2D, textures[1]);
-    glUniform1i(glGetUniformLocation(shaderProgramId, "texture1"), 0);
-    glEnable(GL_DEPTH_TEST);
-
-    glUseProgram(shaderProgramId);  // Activate Shader Program
-    glUniform3f(glGetUniformLocation(shaderProgramId, "color"), 0.2f, 0.3f,
-                0.3f);
-    // Send matrices to the shader
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgramId, "projection"), 1,
-                       GL_FALSE, glm::value_ptr(camera->GetProjection()));
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgramId, "view"), 1,
-                       GL_FALSE, glm::value_ptr(camera->GetView()));
-
-    glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT,
-                   (void*)(36 * sizeof(unsigned int)));
+        offset += objects[i].GetVertexIndices().size();
+    }
 }
 
 void VertexContainer::Unbind() const {

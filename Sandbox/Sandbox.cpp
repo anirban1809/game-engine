@@ -29,11 +29,6 @@ class Sandbox : public Application {
     std::vector<uint32> indices;
 
     void OnInit() {
-        obj = new WavefrontObjLoader();
-        obj->LoadObjectFile(
-            "/Users/anirban/Documents/Code/engine/Sandbox/models/box2.obj");
-        obj->ParseObjectContent();
-
         ObjLoader *loader = new ObjLoader();
         loader->LoadObjectFile(
             "/Users/anirban/Documents/Code/engine/Sandbox/models/box2.obj");
@@ -58,29 +53,29 @@ class Sandbox : public Application {
             std::vector<uint32> localIndices = object.GetVertexIndices();
 
             for (int i = 0; i < object.GetVertexIndices().size(); i++) {
-                localIndices[i] = localIndices[i] + object.indexOffset;
+                localIndices[i] = localIndices[i] + object.vertexIndexOffset;
             }
 
             allIndices.insert(allIndices.end(), localIndices.begin(),
                               localIndices.end());
         }
 
-        std::vector<float> vertices;
-        for (const auto &[x, y, z, u, v] : obj->GetVerticesAndTextures()) {
-            vertices.push_back(x);
-            vertices.push_back(y);
-            vertices.push_back(z);
-            vertices.push_back(u);
-            vertices.push_back(v);
-        }
+        // std::vector<float> vertices;
+        // for (const auto &[x, y, z, u, v] : obj->GetVerticesAndTextures()) {
+        //     vertices.push_back(x);
+        //     vertices.push_back(y);
+        //     vertices.push_back(z);
+        //     vertices.push_back(u);
+        //     vertices.push_back(v);
+        // }
 
-        std::vector<Triangle> triangles = obj->GetTriangles();
+        // std::vector<Triangle> triangles = obj->GetTriangles();
 
-        for (int i = 0; i < triangles.size(); i++) {
-            indices.push_back(std::get<0>((triangles)[i]).v);
-            indices.push_back(std::get<1>((triangles)[i]).v);
-            indices.push_back(std::get<2>((triangles)[i]).v);
-        }
+        // for (int i = 0; i < triangles.size(); i++) {
+        //     indices.push_back(std::get<0>((triangles)[i]).v);
+        //     indices.push_back(std::get<1>((triangles)[i]).v);
+        //     indices.push_back(std::get<2>((triangles)[i]).v);
+        // }
 
         Logger::Log(LOG_INFO, "Initializing Application");
         Logger::Log(LOG_INFO, "Engine Version: 0.0.2 (Feb '25)");
@@ -89,6 +84,9 @@ class Sandbox : public Application {
                             "./src/Shaders/fragment_shader.glsl");
 
         container = new VertexContainer();
+
+        container->AddObjects(loader->GetObjects());
+
         container->Init(allvertices, allIndices, shader->GetProgramId());
         container->Bind();
 
@@ -101,7 +99,6 @@ class Sandbox : public Application {
     void OnKeyPressed(int key) {
         if (key == GLFW_KEY_UP) { camera.TranslateZ(-0.25f); }
         if (key == GLFW_KEY_DOWN) { camera.TranslateZ(0.25f); }
-
         if (key == GLFW_KEY_LEFT) { camera.TranslateX(-0.25f); }
         if (key == GLFW_KEY_RIGHT) { camera.TranslateX(0.25f); }
     }

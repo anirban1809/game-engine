@@ -11,21 +11,23 @@
 /**code to reset temporary values set during computation reuse as and when
  * necessary
  */
-#define __reset_temp_values                          \
-    currentObject.SetVertices(vertices);             \
-    currentObject.SetNormals(normals);               \
-    currentObject.SetTextures(textures);             \
-    currentObject.SetVertexIndices(vertexIndices);   \
-    currentObject.SetTextureIndices(textureIndices); \
-    currentObject.SetNormalIndices(normalIndices);   \
-    currentObject.indexOffset = offset;              \
-    allObjects.push_back(currentObject);             \
-    vertices = {};                                   \
-    textures = {};                                   \
-    normals = {};                                    \
-    vertexIndices = {};                              \
-    textureIndices = {};                             \
-    normalIndices = {};                              \
+#define __reset_temp_values                           \
+    currentObject.SetVertices(vertices);              \
+    currentObject.SetNormals(normals);                \
+    currentObject.SetTextures(textures);              \
+    currentObject.SetVertexIndices(vertexIndices);    \
+    currentObject.SetTextureIndices(textureIndices);  \
+    currentObject.SetNormalIndices(normalIndices);    \
+    currentObject.vertexIndexOffset = vertexoffset;   \
+    currentObject.textureIndexOffset = textureoffset; \
+    currentObject.normalIndexOffset = normaloffset;   \
+    allObjects.push_back(currentObject);              \
+    vertices = {};                                    \
+    textures = {};                                    \
+    normals = {};                                     \
+    vertexIndices = {};                               \
+    textureIndices = {};                              \
+    normalIndices = {};                               \
     objectCreated = false;
 
 void Object::SetVertices(const std::vector<glm::vec3>& v) { vertices = v; }
@@ -57,13 +59,14 @@ std::vector<std::tuple<vec3float, vec2float>> Object::GetVerticesAndTextures()
 
     for (int i = 0; i < vertexIndices.size(); i++) {
         uint32 vertexIndexValue = vertexIndices[i];
+        uint32 textureIndexValue = textureIndices[i];
         result[vertexIndexValue] = std::make_tuple(
             vertices[vertexIndexValue][0], vertices[vertexIndexValue][1],
-            vertices[vertexIndexValue][2], texCoords[vertexIndexValue][0],
-            texCoords[vertexIndexValue][1]);
+            vertices[vertexIndexValue][2], texCoords[textureIndexValue][0],
+            texCoords[textureIndexValue][1]);
     }
 
-    std::vector<std::tuple<float, float, float, float, float>> output(
+    std::vector<std::tuple<vec3float, vec2float>> output(
         result, result + sizeof(result) / sizeof(result[0]));
 
     return output;
@@ -87,11 +90,20 @@ void ObjLoader::LoadObjectFile(const std::string& filename) {
     std::vector<uint32> vertexIndices;
     std::vector<uint32> textureIndices;
     std::vector<uint32> normalIndices;
-    uint32 offset;
+    uint32 vertexoffset;
+    uint32 textureoffset;
+    uint32 normaloffset;
+
     bool objectCreated = false;
 
-    uint32 localMaxIndex = 0;
-    uint32 globalMaxIndex = 0;
+    uint32 localMaxVertexIndex = 0;
+    uint32 globalMaxVertexIndex = 0;
+
+    uint32 localMaxTextureIndex = 0;
+    uint32 globalMaxTextureIndex = 0;
+
+    uint32 localMaxNormalIndex = 0;
+    uint32 globalMaxNormalIndex = 0;
 
     while (std::getline(file, line)) {
         std::stringstream ss(line);
@@ -104,8 +116,14 @@ void ObjLoader::LoadObjectFile(const std::string& filename) {
                 currentObject = Object();
                 objectCreated = true;
             } else {
-                globalMaxIndex = localMaxIndex;
-                localMaxIndex = 0;
+                globalMaxVertexIndex = localMaxVertexIndex;
+                localMaxVertexIndex = 0;
+
+                globalMaxTextureIndex = localMaxTextureIndex;
+                localMaxTextureIndex = 0;
+
+                globalMaxNormalIndex = localMaxNormalIndex;
+                localMaxNormalIndex = 0;
                 __reset_temp_values;
             }
         }
@@ -136,14 +154,18 @@ void ObjLoader::LoadObjectFile(const std::string& filename) {
                 uint32 v, vt, vn;
                 ss >> v >> slash >> vt >> slash >> vn;
 
-                if (v > localMaxIndex) { localMaxIndex = v; }
+                if (v > localMaxVertexIndex) { localMaxVertexIndex = v; }
+                if (vt > localMaxTextureIndex) { localMaxTextureIndex = vt; }
+                if (vn > localMaxNormalIndex) { localMaxNormalIndex = vn; }
 
-                vertexIndices.push_back(v - globalMaxIndex - 1);
-                textureIndices.push_back(vt - globalMaxIndex - 1);
-                normalIndices.push_back(vn - globalMaxIndex - 1);
+                vertexIndices.push_back(v - globalMaxVertexIndex - 1);
+                textureIndices.push_back(vt - globalMaxTextureIndex - 1);
+                normalIndices.push_back(vn - globalMaxNormalIndex - 1);
             }
 
-            offset = globalMaxIndex;
+            vertexoffset = globalMaxVertexIndex;
+            textureoffset = globalMaxTextureIndex;
+            normaloffset = globalMaxNormalIndex;
         }
     }
 
