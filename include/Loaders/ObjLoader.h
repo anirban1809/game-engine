@@ -15,7 +15,8 @@ enum class LightingMode {
     SPECULAR_ENABLED = 2
 };
 
-typedef struct {
+class Material {
+   public:
     std::string name;
     glm::vec3 ambientColor;
     glm::vec3 diffuseColor;
@@ -27,8 +28,7 @@ typedef struct {
     std::string specularMapFile;
     std::string bumpMapFile;
     std::string opacityMapFile;
-
-} Material;
+};
 
 class Object {
    public:
@@ -38,7 +38,9 @@ class Object {
     void SetVertexIndices(const std::vector<uint32>& indices);
     void SetTextureIndices(const std::vector<uint32>& indices);
     void SetNormalIndices(const std::vector<uint32>& indices);
-    void AddMaterial(const Material& material);
+    void AdjustReusedVertices();
+    void SetMaterial(const Material& material);
+    Material GetMaterial() const;
     std::vector<std::tuple<vec3float, vec2float>> GetVerticesAndTextures()
         const;
 
@@ -59,19 +61,20 @@ class Object {
     std::vector<uint32> vertexIndices;
     std::vector<uint32> textureIndices;
     std::vector<uint32> normalIndices;
-    std::vector<Material> materials;
+    Material material;
 };
 
 class ObjLoader {
    public:
     void LoadObjectFile(const std::string& filename);
-    void LoadMaterialFile();
+    void LoadMaterialFile(const std::string& filename);
     std::vector<Object> GetObjects();
 
    private:
     std::string objectFile;
     std::string materialFile;
     std::vector<Object> objects;
+    std::vector<Material> materials;
 };
 
 #endif  // __OBJLOADER_H__

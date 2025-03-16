@@ -1,5 +1,4 @@
 #include <tuple>
-#include <vector>
 #include "../include/Transformers/Scale.h"
 #include "Loaders/Wavefront.h"
 

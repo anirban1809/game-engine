@@ -63,8 +63,7 @@ void VertexContainer::Init(std::vector<float>& vertexBuffer,
 
     for (const auto& obj : objects) {
         textures.push_back(
-            texture->LoadTexture("/Users/anirban/Documents/Code/engine/Sandbox/"
-                                 "models/texture1.png"));
+            texture->LoadTexture(obj.GetMaterial().diffuseTextureFile));
     }
 
     // glBindTexture(

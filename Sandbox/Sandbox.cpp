@@ -6,15 +6,9 @@
 #include "../include/Loaders/Wavefront.h"
 #include "Core/Types.h"
 #include "../include/Loaders/ObjLoader.h"
-#include "Transformers/Scale.h"
-#include <algorithm>
-#include <cstdio>
-#include <iostream>
 #include <string>
-#include <tuple>
 #include <vector>
 #include <unistd.h>
-#include "../vendor/glm/glm.hpp"
 
 class Sandbox : public Application {
    public:
@@ -30,8 +24,12 @@ class Sandbox : public Application {
 
     void OnInit() {
         ObjLoader *loader = new ObjLoader();
+        loader->LoadMaterialFile(
+            "/Users/anirban/Documents/Code/engine/Sandbox/models/"
+            "threecubes.mtl");
         loader->LoadObjectFile(
-            "/Users/anirban/Documents/Code/engine/Sandbox/models/box2.obj");
+            "/Users/anirban/Documents/Code/engine/Sandbox/models/"
+            "threecubes.obj");
 
         std::vector<float> allvertices;
         std::vector<uint32> allIndices;
@@ -59,23 +57,6 @@ class Sandbox : public Application {
             allIndices.insert(allIndices.end(), localIndices.begin(),
                               localIndices.end());
         }
-
-        // std::vector<float> vertices;
-        // for (const auto &[x, y, z, u, v] : obj->GetVerticesAndTextures()) {
-        //     vertices.push_back(x);
-        //     vertices.push_back(y);
-        //     vertices.push_back(z);
-        //     vertices.push_back(u);
-        //     vertices.push_back(v);
-        // }
-
-        // std::vector<Triangle> triangles = obj->GetTriangles();
-
-        // for (int i = 0; i < triangles.size(); i++) {
-        //     indices.push_back(std::get<0>((triangles)[i]).v);
-        //     indices.push_back(std::get<1>((triangles)[i]).v);
-        //     indices.push_back(std::get<2>((triangles)[i]).v);
-        // }
 
         Logger::Log(LOG_INFO, "Initializing Application");
         Logger::Log(LOG_INFO, "Engine Version: 0.0.2 (Feb '25)");

@@ -1,6 +1,7 @@
 #ifndef SHADER_H
 #define SHADER_H
 
+#include "Core/Types.h"
 #include <string>
 
 class Shader {
@@ -9,12 +10,12 @@ class Shader {
     ~Shader();
 
     void Use() const;
-    unsigned int GetProgramId();
+    uint32 GetProgramId();
 
    private:
-    unsigned int programID;
+    uint32 programID;
     std::string LoadShaderSource(const std::string &filePath);
-    unsigned int CompileShader(unsigned int type, const std::string &source);
+    uint32 CompileShader(uint32 type, const std::string &source);
 };
 
 #endif
