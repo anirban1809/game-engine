@@ -70,6 +70,14 @@ void VertexContainer::Init(std::vector<float>& vertexBuffer,
 
     glActiveTexture(GL_TEXTURE0);
 
+    // Enable face culling
+    glEnable(GL_CULL_FACE);
+    // Cull back faces
+    glCullFace(GL_BACK);
+    // Specify front face winding order (optional, depending on your vertex
+    // order)
+    glFrontFace(GL_CCW);
+
     for (const auto& obj : objects) {
         textures.push_back(
             texture->LoadTexture(obj.GetMaterial().diffuseTextureFile));
@@ -122,13 +130,16 @@ void VertexContainer::ApplyTexture(uint32 shaderProgramId, uint32 textureId) {
     glUniformMatrix4fv(glGetUniformLocation(shaderProgramId, "view"), 1,
                        GL_FALSE, glm::value_ptr(camera->GetView()));
 
+    glUniform3fv(glGetUniformLocation(shaderProgramId, "viewPos"), 1,
+                 glm::value_ptr(camera->GetCameraPosition()));
+
     glUniform3fv(glGetUniformLocation(shaderProgramId, "lightPos"), 1,
                  glm::value_ptr(light->GetPosition()));
     glUniform3fv(glGetUniformLocation(shaderProgramId, "lightColor"), 1,
                  glm::value_ptr(light->GetColor()));
 
     // Set material diffuse color (you can tweak this):
-    glm::vec3 materialDiffuse(0.7f, 0.4f, 0.7f);
+    glm::vec3 materialDiffuse(1.0f, 1.0f, 1.0f);
     glUniform3fv(glGetUniformLocation(shaderProgramId, "diffuseColor"), 1,
                  glm::value_ptr(materialDiffuse));
 }

@@ -16,6 +16,7 @@ class Window {
     void SwapBuffers();
 
     void SetKeyCallback(KeyCallback callback);
+    GLFWwindow *GetGLFWWindow();
 
    private:
     GLFWwindow *window;

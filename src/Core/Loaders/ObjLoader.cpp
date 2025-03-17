@@ -254,24 +254,6 @@ struct VertexKeyHash {
 };
 
 void Object::AdjustReusedVertices() {
-    // We assume that:
-    //   vertices: vector of glm::vec3 (positions)
-    //   texCoords: vector of glm::vec2 (texture coordinates)
-    //   normals: vector of glm::vec3 (normals)
-    //   vertexIndices, textureIndices, normalIndices: separate arrays of
-    //   indices,
-    //      each of the same size, where for any face vertex i, the intended
-    //      attributes are: vertices[ vertexIndices[i] ], texCoords[
-    //      textureIndices[i] ], normals[ normalIndices[i] ]
-    //
-    // Our goal is to ensure that each face vertex uses a unique combination of
-    // position, texture, and normal. To do this, we will create new arrays for
-    // the attributes and new index arrays. Even though we keep the arrays
-    // separate (i.e. vertices, texCoords, normals, vertexIndices,
-    // textureIndices, normalIndices), we will update all three index arrays so
-    // that they all refer to the same unified vertex (i.e. new index in the new
-    // arrays).
-
     // New (unified) attribute arrays:
     std::vector<glm::vec3> newVertices;
     std::vector<glm::vec2> newTexCoords;

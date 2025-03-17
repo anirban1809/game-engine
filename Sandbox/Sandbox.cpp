@@ -6,9 +6,13 @@
 #include "../include/Loaders/Wavefront.h"
 #include "Core/Types.h"
 #include "../include/Loaders/ObjLoader.h"
+#include <iostream>
 #include <string>
 #include <vector>
 #include <unistd.h>
+
+#include "../../../vendor/imgui/imgui_impl_glfw.h"
+#include "../../../vendor/imgui/imgui_impl_opengl3.h"
 
 class Sandbox : public Application {
    public:
@@ -21,15 +25,16 @@ class Sandbox : public Application {
     WavefrontObjLoader *obj;
     std::vector<float> stage;
     std::vector<uint32> indices;
+    bool value = false;
 
     void OnInit() {
         ObjLoader *loader = new ObjLoader();
         loader->LoadMaterialFile(
             "/Users/anirban/Documents/Code/engine/Sandbox/models/"
-            "testscene.mtl");
+            "balls3.mtl");
         loader->LoadObjectFile(
             "/Users/anirban/Documents/Code/engine/Sandbox/models/"
-            "testscene.obj");
+            "balls3.obj");
 
         std::vector<float> allvertices;
         std::vector<uint32> allIndices;
@@ -75,7 +80,7 @@ class Sandbox : public Application {
         container->Bind();
 
         camera.SetCameraProjection(45.0f, 1.0f, 0.1f, 1000.0f);
-        camera.SetCameraPosition(0.0f, 1.0f, 1.0f);
+        camera.SetCameraPosition(0.0f, 10.0f, 10.0f);
         camera.SetCameraLook(0.0f, 0.0f, 0.0f);
 
         light.SetColor(glm::vec3(1.0f, 1.0f, 1.0f));
@@ -105,5 +110,13 @@ class Sandbox : public Application {
         container->Bind();
         container->Draw(shader->GetProgramId());
         container->Unbind();
+
+        ImGui::Begin("Window Names");
+        ImGui::Text("This is a texts");
+        ImGui::Checkbox("Draw Triangle", &value);
+
+        std::cout << "Value = " << value << std::endl;
+
+        ImGui::End();
     }
 };

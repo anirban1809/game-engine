@@ -20,9 +20,9 @@ class Application {
     virtual void OnKeyPressed(int key) {}
     Camera camera;
     Light light;
+    Window *window;
 
    private:
-    Window *window;
     Renderer *renderer;
 };
 

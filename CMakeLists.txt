@@ -11,8 +11,8 @@ set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")  # Add debug symbols and disable optimizatio
 set(LOCAL_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/include")
 
 set(GLEW_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/vendor/glew-2.2.0/include")
+set(IMGUI_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/vendor/imgui")
 set(GLEW_LIBRARY "${CMAKE_SOURCE_DIR}/vendor/glew-2.2.0/lib/libGLEW.a")
-
 # Define GLFW Paths
 set(GLFW_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/vendor/glfw-3.4.bin.MACOS/include")
 set(GLFW_LIBRARY "${CMAKE_SOURCE_DIR}/vendor/glfw-3.4.bin.MACOS/lib-arm64/libglfw.3.dylib")
@@ -21,10 +21,13 @@ set(GLFW_LIBRARY "${CMAKE_SOURCE_DIR}/vendor/glfw-3.4.bin.MACOS/lib-arm64/libglf
 include_directories(${GLFW_INCLUDE_DIR})
 include_directories(${GLEW_INCLUDE_DIR})
 include_directories(${LOCAL_INCLUDE_DIR})
+include_directories(${IMGUI_INCLUDE_DIR})
 
 # Add Executable
-file(GLOB_RECURSE SOURCES "./src/*.cpp")
-add_executable(release ${SOURCES} "main.cpp")
+file(GLOB_RECURSE SOURCES_LOCAL "./src/*.cpp")
+file(GLOB_RECURSE SOURCES_DEPS "${IMGUI_INCLUDE_DIR}/*.cpp")
+
+add_executable(release ${SOURCES_LOCAL} ${SOURCES_DEPS} "main.cpp")
 
 target_link_libraries(release
     #link GLEW and GLFW

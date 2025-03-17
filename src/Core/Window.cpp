@@ -7,7 +7,7 @@ Window::Window(int width, int height, const char* title) {
         std::cerr << "Failed to initialize GLFW" << std::endl;
         return;
     }
-    
+
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -24,6 +24,8 @@ Window::Window(int width, int height, const char* title) {
     glfwSetWindowUserPointer(window, this);
     glfwSetKeyCallback(window, KeyCallbackInternal);
 }
+
+GLFWwindow* Window::GetGLFWWindow() { return window; }
 
 Window::~Window() {
     glfwDestroyWindow(window);
