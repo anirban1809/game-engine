@@ -2,6 +2,7 @@
 #define __APPLICATION_H__
 
 #include "Core/Camera.h"
+#include "Core/Light.h"
 #include "Renderer.h"
 #include "Window.h"
 
@@ -18,6 +19,7 @@ class Application {
     virtual void OnRender(){};  // Override for custom rendering
     virtual void OnKeyPressed(int key) {}
     Camera camera;
+    Light light;
 
    private:
     Window *window;

@@ -2,6 +2,7 @@
 #define __VERTEX_H__
 
 #include "Camera.h"
+#include "Core/Light.h"
 #include "Core/Texture.h"
 #include "Loaders/ObjLoader.h"
 #include "Types.h"
@@ -21,6 +22,7 @@ class VertexContainer {
     void Draw(uint32 programId);
     void Unbind() const;
     void ApplyTexture(uint32, uint32);
+    void AttachLight(Light *light);
 
     void AttachCamera(Camera *camera);
 
@@ -33,6 +35,7 @@ class VertexContainer {
     uint32 vertexSize;
     uint32 indexSize;
     Camera *camera;
+    Light *light;
     Texture *texture;
     std::vector<uint32> textures;
     std::vector<Object> objects;

@@ -77,6 +77,33 @@ std::vector<std::tuple<vec3float, vec2float>> Object::GetVerticesAndTextures()
     return output;
 }
 
+std::vector<std::tuple<vec3float, vec2float, vec3float>>
+Object::GetAllVertexData() const {
+    std::tuple<vec3float, vec2float, vec3float> result[vertices.size()];
+
+    for (int i = 0; i < vertexIndices.size(); i++) {
+        uint32 vertexIndexValue = vertexIndices[i];
+        uint32 textureIndexValue = textureIndices[i];
+        uint32 normalIndexValue = normalIndices[i];
+        result[vertexIndexValue] = std::make_tuple(
+            // vertices
+            vertices[vertexIndexValue][0], vertices[vertexIndexValue][1],
+            vertices[vertexIndexValue][2],
+
+            // textures
+            texCoords[textureIndexValue][0], texCoords[textureIndexValue][1],
+
+            // normals
+            normals[normalIndexValue][0], normals[normalIndexValue][1],
+            normals[normalIndexValue][2]);
+    }
+
+    std::vector<std::tuple<vec3float, vec2float, vec3float>> output(
+        result, result + sizeof(result) / sizeof(result[0]));
+
+    return output;
+}
+
 Material Object::GetMaterial() const { return material; }
 
 void ObjLoader::LoadObjectFile(const std::string& filename) {
@@ -200,46 +227,107 @@ void ObjLoader::LoadObjectFile(const std::string& filename) {
     file.close();
 }
 
+// A hash functor for a tuple of two uint32 values (texture index, normal
+// index).
+struct PairHash {
+    std::size_t operator()(const std::tuple<uint32, uint32>& key) const {
+        uint32 a = std::get<0>(key);
+        uint32 b = std::get<1>(key);
+        return std::hash<uint32>()(a) ^ (std::hash<uint32>()(b) << 1);
+    }
+};
+
+// Define a key type for (vertex index, texture index, normal index)
+typedef std::tuple<uint32, uint32, uint32> VertexKey;
+
+// Custom hash for VertexKey
+struct VertexKeyHash {
+    std::size_t operator()(const VertexKey& key) const {
+        uint32 a = std::get<0>(key);
+        uint32 b = std::get<1>(key);
+        uint32 c = std::get<2>(key);
+        size_t h1 = std::hash<uint32>()(a);
+        size_t h2 = std::hash<uint32>()(b);
+        size_t h3 = std::hash<uint32>()(c);
+        return h1 ^ (h2 << 1) ^ (h3 << 2);
+    }
+};
+
 void Object::AdjustReusedVertices() {
-    // Reserve space for the outer map: upper bound is the number of original
-    // vertices.
-    std::unordered_map<uint32, std::unordered_map<uint32, uint32>> duplicateMap;
-    duplicateMap.reserve(vertices.size());
+    // We assume that:
+    //   vertices: vector of glm::vec3 (positions)
+    //   texCoords: vector of glm::vec2 (texture coordinates)
+    //   normals: vector of glm::vec3 (normals)
+    //   vertexIndices, textureIndices, normalIndices: separate arrays of
+    //   indices,
+    //      each of the same size, where for any face vertex i, the intended
+    //      attributes are: vertices[ vertexIndices[i] ], texCoords[
+    //      textureIndices[i] ], normals[ normalIndices[i] ]
+    //
+    // Our goal is to ensure that each face vertex uses a unique combination of
+    // position, texture, and normal. To do this, we will create new arrays for
+    // the attributes and new index arrays. Even though we keep the arrays
+    // separate (i.e. vertices, texCoords, normals, vertexIndices,
+    // textureIndices, normalIndices), we will update all three index arrays so
+    // that they all refer to the same unified vertex (i.e. new index in the new
+    // arrays).
 
-    // Process each face index entry.
+    // New (unified) attribute arrays:
+    std::vector<glm::vec3> newVertices;
+    std::vector<glm::vec2> newTexCoords;
+    std::vector<glm::vec3> newNormals;
+
+    // New index arrays (we keep them separate, but they will end up holding the
+    // same values).
+    std::vector<uint32> newVertexIndices;
+    std::vector<uint32> newTextureIndices;
+    std::vector<uint32> newNormalIndices;
+
+    // Map to track each unique (position, texcoord, normal) combination.
+    std::unordered_map<VertexKey, uint32, VertexKeyHash> uniqueMap;
+    uniqueMap.reserve(vertexIndices.size());
+
+    // Iterate over each face vertex (i.e. each entry in the index arrays).
     for (size_t i = 0; i < vertexIndices.size(); ++i) {
-        uint32 origIndex = vertexIndices[i];
-        uint32 texIndex = textureIndices[i];
+        uint32 vIndex = vertexIndices[i];
+        uint32 tIndex = textureIndices[i];
+        uint32 nIndex = normalIndices[i];
 
-        // Look for an existing mapping for this original vertex.
-        auto outerIt = duplicateMap.find(origIndex);
-        if (outerIt == duplicateMap.end()) {
-            // First time we see this vertex.
-            // Create an inner map and reserve a couple of entries.
-            std::unordered_map<uint32, uint32> innerMap;
-            innerMap.reserve(2);
-            // Map the current texture index to the original vertex index.
-            innerMap.emplace(texIndex, origIndex);
-            duplicateMap.emplace(origIndex, std::move(innerMap));
-            // Leave vertexIndices[i] unchanged.
+        // Create a key from the current combination.
+        VertexKey key = std::make_tuple(vIndex, tIndex, nIndex);
+
+        auto it = uniqueMap.find(key);
+        if (it == uniqueMap.end()) {
+            // This combination hasn't been seen yet.
+            uint32 newIndex = static_cast<uint32>(newVertices.size());
+            uniqueMap[key] = newIndex;
+
+            // Duplicate the attributes into the new arrays.
+            newVertices.push_back(vertices[vIndex]);
+            newTexCoords.push_back(texCoords[tIndex]);
+            newNormals.push_back(normals[nIndex]);
+
+            // For this face vertex, store the new index in all three index
+            // arrays.
+            newVertexIndices.push_back(newIndex);
+            newTextureIndices.push_back(newIndex);
+            newNormalIndices.push_back(newIndex);
         } else {
-            auto& innerMap = outerIt->second;
-            auto innerIt = innerMap.find(texIndex);
-            if (innerIt != innerMap.end()) {
-                // This (vertex, texture) combination was seen before.
-                vertexIndices[i] = innerIt->second;
-            } else {
-                // Found the vertex, but with a new texture index.
-                // Duplicate the vertex by pushing a copy.
-                uint32 newIndex = static_cast<uint32>(vertices.size());
-                vertices.push_back(vertices[origIndex]);
-                // Record the new mapping.
-                innerMap.emplace(texIndex, newIndex);
-                // Update the face index.
-                vertexIndices[i] = newIndex;
-            }
+            // Reuse the existing unified vertex.
+            uint32 unifiedIndex = it->second;
+            newVertexIndices.push_back(unifiedIndex);
+            newTextureIndices.push_back(unifiedIndex);
+            newNormalIndices.push_back(unifiedIndex);
         }
     }
+
+    // Replace the original arrays with the new ones.
+    vertices = newVertices;
+    texCoords = newTexCoords;
+    normals = newNormals;
+    vertexIndices = newVertexIndices;
+    textureIndices = newTextureIndices;
+    normalIndices = newNormalIndices;
 }
 
 void ObjLoader::LoadMaterialFile(const std::string& filename) {
@@ -299,16 +387,17 @@ void ObjLoader::LoadMaterialFile(const std::string& filename) {
             char mode;
             ss >> mode;
 
-            if (mode == '0') {
-                currentMaterial.lightingMode = LightingMode::NO_LIGHTING;
-            }
-
-            if (mode == '1') {
-                currentMaterial.lightingMode = LightingMode::DIFFUSE_ONLY;
-            }
-
-            if (mode == '2') {
-                currentMaterial.lightingMode = LightingMode::SPECULAR_ENABLED;
+            switch (mode) {
+                case '0':
+                    currentMaterial.lightingMode = LightingMode::NO_LIGHTING;
+                    break;
+                case '1':
+                    currentMaterial.lightingMode = LightingMode::DIFFUSE_ONLY;
+                    break;
+                case '2':
+                    currentMaterial.lightingMode =
+                        LightingMode::SPECULAR_ENABLED;
+                    break;
             }
         }
 

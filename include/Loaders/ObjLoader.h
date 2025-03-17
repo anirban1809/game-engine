@@ -44,6 +44,9 @@ class Object {
     std::vector<std::tuple<vec3float, vec2float>> GetVerticesAndTextures()
         const;
 
+    std::vector<std::tuple<vec3float, vec2float, vec3float>> GetAllVertexData()
+        const;
+
     std::vector<glm::vec3> GetVertices();
     std::vector<glm::vec2> GetTextures();
     std::vector<glm::vec3> GetNormals();

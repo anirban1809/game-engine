@@ -26,23 +26,26 @@ class Sandbox : public Application {
         ObjLoader *loader = new ObjLoader();
         loader->LoadMaterialFile(
             "/Users/anirban/Documents/Code/engine/Sandbox/models/"
-            "threecubes.mtl");
+            "testscene.mtl");
         loader->LoadObjectFile(
             "/Users/anirban/Documents/Code/engine/Sandbox/models/"
-            "threecubes.obj");
+            "testscene.obj");
 
         std::vector<float> allvertices;
         std::vector<uint32> allIndices;
 
         for (auto const &object : loader->GetObjects()) {
             std::vector<float> vertices;
-            for (const auto &[x, y, z, u, v] :
-                 object.GetVerticesAndTextures()) {
+            for (const auto &[x, y, z, u, v, nx, ny, nz] :
+                 object.GetAllVertexData()) {
                 vertices.push_back(x);
                 vertices.push_back(y);
                 vertices.push_back(z);
                 vertices.push_back(u);
                 vertices.push_back(v);
+                vertices.push_back(nx);
+                vertices.push_back(ny);
+                vertices.push_back(nz);
             }
 
             allvertices.insert(allvertices.end(), vertices.begin(),
@@ -74,7 +77,12 @@ class Sandbox : public Application {
         camera.SetCameraProjection(45.0f, 1.0f, 0.1f, 1000.0f);
         camera.SetCameraPosition(0.0f, 1.0f, 1.0f);
         camera.SetCameraLook(0.0f, 0.0f, 0.0f);
+
+        light.SetColor(glm::vec3(1.0f, 1.0f, 1.0f));
+        light.SetPosition(glm::vec3(0.0, 10.0, 0.0));
+
         container->AttachCamera(&camera);
+        container->AttachLight(&light);
     }
 
     void OnKeyPressed(int key) {
@@ -82,6 +90,15 @@ class Sandbox : public Application {
         if (key == GLFW_KEY_DOWN) { camera.TranslateZ(0.25f); }
         if (key == GLFW_KEY_LEFT) { camera.TranslateX(-0.25f); }
         if (key == GLFW_KEY_RIGHT) { camera.TranslateX(0.25f); }
+
+        if (key == GLFW_KEY_W) { light.UpdateLightPositionX(0.25f); }
+        if (key == GLFW_KEY_S) { light.UpdateLightPositionX(-0.25f); }
+
+        if (key == GLFW_KEY_A) { light.UpdateLightPositionZ(0.25f); }
+        if (key == GLFW_KEY_D) { light.UpdateLightPositionZ(-0.25f); }
+
+        if (key == GLFW_KEY_1) { light.UpdateLightPositionY(0.25f); }
+        if (key == GLFW_KEY_2) { light.UpdateLightPositionY(-0.25f); }
     }
 
     void OnRender() {

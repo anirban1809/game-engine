@@ -19,6 +19,7 @@
 #include "../../vendor/glm/gtc/matrix_transform.hpp"
 #include "../../vendor/glm/gtc/type_ptr.hpp"
 #include "../../include/Core/Camera.h"
+#include "../../include/Core/Light.h"
 
 void VertexContainer::Init(std::vector<float>& vertexBuffer,
                            std::vector<uint32>& indexBuffer,
@@ -48,13 +49,21 @@ void VertexContainer::Init(std::vector<float>& vertexBuffer,
 
     // Setup the vertex attribute pointer:
     // We assume each vertex is (x,y) -> 2 floats per vertex.
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+
+    // Attribute 0: Position
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
                           (void*)0);
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float),
+    // Attribute 1: Texture Coordinates
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
                           (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
+
+    // Attribute 2: Normals
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
+                          (void*)(5 * sizeof(float)));
+    glEnableVertexAttribArray(2);
 
     // Unbind the VAO to prevent accidental modifications
     glBindVertexArray(0);
@@ -65,12 +74,6 @@ void VertexContainer::Init(std::vector<float>& vertexBuffer,
         textures.push_back(
             texture->LoadTexture(obj.GetMaterial().diffuseTextureFile));
     }
-
-    // glBindTexture(
-    //     GL_TEXTURE_2D,
-    //     texturei,
-    // glUniform1i(glGetUniformLocation(shaderProgramId, "texture1"), 0);
-    // glEnable(GL_DEPTH_TEST);
 }
 
 /**
@@ -98,20 +101,36 @@ void VertexContainer::UpdateVertexBuffer(const std::vector<float>& newVertices,
 void VertexContainer::Bind() const { glBindVertexArray(VAO); }
 
 void VertexContainer::AttachCamera(Camera* cam) { camera = cam; }
+void VertexContainer::AttachLight(Light* l) { light = l; }
 
 void VertexContainer::ApplyTexture(uint32 shaderProgramId, uint32 textureId) {
+    glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textureId);
     glUniform1i(glGetUniformLocation(shaderProgramId, "texture1"), 0);
     glEnable(GL_DEPTH_TEST);
 
-    glUseProgram(shaderProgramId);  // Activate Shader Program
+    glUseProgram(shaderProgramId);
     glUniform3f(glGetUniformLocation(shaderProgramId, "color"), 0.2f, 0.3f,
                 0.3f);
-    // Send matrices to the shader
+
+    glm::mat4 model = glm::mat4(1.0f);
+
+    glUniformMatrix4fv(glGetUniformLocation(shaderProgramId, "model"), 1,
+                       GL_FALSE, glm::value_ptr(model));
     glUniformMatrix4fv(glGetUniformLocation(shaderProgramId, "projection"), 1,
                        GL_FALSE, glm::value_ptr(camera->GetProjection()));
     glUniformMatrix4fv(glGetUniformLocation(shaderProgramId, "view"), 1,
                        GL_FALSE, glm::value_ptr(camera->GetView()));
+
+    glUniform3fv(glGetUniformLocation(shaderProgramId, "lightPos"), 1,
+                 glm::value_ptr(light->GetPosition()));
+    glUniform3fv(glGetUniformLocation(shaderProgramId, "lightColor"), 1,
+                 glm::value_ptr(light->GetColor()));
+
+    // Set material diffuse color (you can tweak this):
+    glm::vec3 materialDiffuse(0.7f, 0.4f, 0.7f);
+    glUniform3fv(glGetUniformLocation(shaderProgramId, "diffuseColor"), 1,
+                 glm::value_ptr(materialDiffuse));
 }
 
 void VertexContainer::AddObjects(const std::vector<Object>& _objects) {
