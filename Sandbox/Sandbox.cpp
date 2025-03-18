@@ -4,15 +4,19 @@
 #include "../include/Core/VertexContainer.h"
 #include "../vendor/glew-2.2.0/include/GL/glew.h"
 #include "../include/Loaders/Wavefront.h"
+#include "Core/Light.h"
 #include "Core/Types.h"
 #include "../include/Loaders/ObjLoader.h"
 #include <iostream>
 #include <string>
 #include <vector>
 #include <unistd.h>
+#include "../vendor/glm/glm.hpp"
+#include "../vendor/glm/gtc/type_ptr.hpp"
 
 #include "../../../vendor/imgui/imgui_impl_glfw.h"
 #include "../../../vendor/imgui/imgui_impl_opengl3.h"
+#include "imgui.h"
 
 class Sandbox : public Application {
    public:
@@ -31,10 +35,10 @@ class Sandbox : public Application {
         ObjLoader *loader = new ObjLoader();
         loader->LoadMaterialFile(
             "/Users/anirban/Documents/Code/engine/Sandbox/models/"
-            "balls3.mtl");
+            "testscene.mtl");
         loader->LoadObjectFile(
             "/Users/anirban/Documents/Code/engine/Sandbox/models/"
-            "balls3.obj");
+            "testscene.obj");
 
         std::vector<float> allvertices;
         std::vector<uint32> allIndices;
@@ -111,12 +115,49 @@ class Sandbox : public Application {
         container->Draw(shader->GetProgramId());
         container->Unbind();
 
-        ImGui::Begin("Window Names");
-        ImGui::Text("This is a texts");
-        ImGui::Checkbox("Draw Triangle", &value);
+        ImGui::Begin("Light Properties", &value, ImGuiWindowFlags_MenuBar);
+        if (ImGui::BeginMenuBar()) {
+            if (ImGui::BeginMenu("File")) {
+                if (ImGui::MenuItem("New Project", "Ctrl+O")) {
+                    std::cout << "Create new project" << std::endl;
+                    ImGui::Begin("New Project", &value,
+                                 ImGuiWindowFlags_MenuBar);
+                    ImGui::Text("Create New Project");
+                    ImGui::End();
+                }
 
-        std::cout << "Value = " << value << std::endl;
+                if (ImGui::MenuItem("Open..", "Ctrl+O")) { /* Do stuff */
+                }
+                if (ImGui::MenuItem("Save", "Ctrl+S")) { /* Do stuff */
+                }
+                if (ImGui::MenuItem("Close", "Ctrl+W")) { value = false; }
+                ImGui::EndMenu();
+            }
+            if (ImGui::BeginMenu("Edit")) {
+                if (ImGui::MenuItem("Open..", "Ctrl+O")) { /* Do stuff */
+                }
+                if (ImGui::MenuItem("Save", "Ctrl+S")) { /* Do stuff */
+                }
+                if (ImGui::MenuItem("Close", "Ctrl+W")) { value = false; }
+                ImGui::EndMenu();
+            }
+            ImGui::EndMenuBar();
+        }
 
+        ImGui::Checkbox("Click", &value);
+
+        ImGui::DragFloat("Adjust X",
+                         light.GetParameterPointer(Parameters::XPosition),
+                         0.05f, -100.0f, 100.0f);
+        ImGui::DragFloat("Adjust Y",
+                         light.GetParameterPointer(Parameters::YPosition),
+                         0.05f, 0.0f, 100.0f);
+        ImGui::DragFloat("Adjust Z",
+                         light.GetParameterPointer(Parameters::ZPosition),
+                         0.05f, -100.0f, 100.0f);
+
+        ImGui::ColorEdit3("Light Color",
+                          light.GetParameterPointer(Parameters::LightColor));
         ImGui::End();
     }
 };

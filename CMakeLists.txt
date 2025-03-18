@@ -4,9 +4,10 @@ project(release)
 set(CMAKE_CXX_STANDARD 17)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-
-set(CMAKE_BUILD_TYPE Debug)  # Ensures Debug mode
-set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")  # Add debug symbols and disable optimizations
+set(CMAKE_BUILD_TYPE Release)  # Ensures Release mode
+set(CMAKE_CXX_FLAGS_RELEASE "-O3")  # Enable optimizations
+# set(CMAKE_BUILD_TYPE Debug)  # Ensures Debug mode
+# set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")  # Add debug symbols and disable optimizations
 
 set(LOCAL_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/include")
 

@@ -20,6 +20,8 @@ Window::Window(int width, int height, const char* title) {
         return;
     }
 
+    int bufferWidth, bufferHeight;
+    glfwGetFramebufferSize(window, &bufferWidth, &bufferHeight);
     glfwMakeContextCurrent(window);
     glfwSetWindowUserPointer(window, this);
     glfwSetKeyCallback(window, KeyCallbackInternal);

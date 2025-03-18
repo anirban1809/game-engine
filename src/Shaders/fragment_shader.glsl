@@ -12,7 +12,6 @@ uniform sampler2D texture1;  // The diffuse texture
 uniform vec3 lightPos;      // Light position in world space
 uniform vec3 lightColor;    // Light color (intensity)
 uniform vec3 diffuseColor;  // Material diffuse color
-
 uniform vec3 viewPos;
 
 void main() {
