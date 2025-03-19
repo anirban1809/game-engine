@@ -25,6 +25,7 @@ Window::Window(int width, int height, const char* title) {
     glfwMakeContextCurrent(window);
     glfwSetWindowUserPointer(window, this);
     glfwSetKeyCallback(window, KeyCallbackInternal);
+    glfwSetMouseButtonCallback(window, MouseCallbackInternal);
 }
 
 GLFWwindow* Window::GetGLFWWindow() { return window; }
@@ -41,6 +42,9 @@ void Window::PollEvents() { glfwPollEvents(); }
 void Window::SwapBuffers() { glfwSwapBuffers(window); }
 
 void Window::SetKeyCallback(KeyCallback callback) { keyCallback = callback; }
+void Window::SetMouseCallback(MouseCallback callback) {
+    mouseCallback = callback;
+}
 
 void Window::KeyCallbackInternal(GLFWwindow* window, int key, int scancode,
                                  int action, int mods) {
@@ -50,6 +54,21 @@ void Window::KeyCallbackInternal(GLFWwindow* window, int key, int scancode,
             win->keyCallback(key, action);
         } else {
             std::cout << "Key Callback is NOT set!" << std::endl;
+        }
+    } else {
+        std::cout << "Window pointer is NULL!" << std::endl;
+    }
+}
+
+void Window::MouseCallbackInternal(GLFWwindow* window, int button, int action,
+                                   int mods) {
+    Window* win = static_cast<Window*>(glfwGetWindowUserPointer(window));
+
+    if (win) {
+        if (win->mouseCallback) {
+            win->mouseCallback(button, action);
+        } else {
+            std::cout << "Mouse Callback is NOT set!" << std::endl;
         }
     } else {
         std::cout << "Window pointer is NULL!" << std::endl;

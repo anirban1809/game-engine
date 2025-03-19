@@ -16,6 +16,12 @@ Application::Application(int width, int height, const char* title) {
             OnKeyPressed(key);  // Call the abstracted method
         }
     });
+
+    window->SetMouseCallback([this](int button, int action) {
+        if (action == GLFW_PRESS) {
+            OnMousePressed(button);  // Call the abstracted method
+        }
+    });
 }
 
 Application::~Application() {
@@ -72,20 +78,6 @@ void Application::Run() {
         ImGui::Begin("My Scene", nullptr,
                      ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
 
-        // Get global position of the current ImGui window.
-        ImVec2 globalPos = ImGui::GetWindowPos();
-
-        // Get the main viewport position, which usually corresponds to the GLFW
-        // window's top-left.
-        ImGuiViewport* mainViewport = ImGui::GetMainViewport();
-        ImVec2 glfwPos = mainViewport->Pos;
-
-        // Compute the relative position.
-        ImVec2 relativePos(globalPos.x - glfwPos.x, globalPos.y - glfwPos.y);
-
-        // Print to console (for example, using printf)
-        printf("Scene Position: (%.1f, %.1f)\n", relativePos.x, relativePos.y);
-
         const float window_width = ImGui::GetContentRegionAvail().x;
         const float window_height = ImGui::GetContentRegionAvail().y;
 
@@ -102,7 +94,13 @@ void Application::Run() {
 
         ImGui::End();
         // Secondary window for additional UI (like debug info)
-        ImGui::Begin("Secondary Window");
+
+        ImGui::SetNextWindowPos(
+            ImVec2(viewport->Pos.x + 1580, viewport->Pos.y + 10),
+            ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(330, 1000), ImGuiCond_Once);
+        ImGui::Begin("Secondary Window", nullptr,
+                     ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove);
         ImGui::Text("This is the secondary ImGui window.");
         // Add more UI elements here as needed
         ImGui::End();
@@ -111,9 +109,8 @@ void Application::Run() {
 
         glViewport(0, 0, window_width,
                    window_height);  // Set the viewport for the FBO
-        glClear(GL_COLOR_BUFFER_BIT |
-                GL_DEPTH_BUFFER_BIT);  // Clear the FBO's buffers
-        OnRender();                    // Custom rendering logic
+        renderer->Clear();          // Clear the FBO's buffers
+        OnRender();                 // Custom rendering logic
         ImGui::Render();
         sceneBuffer.Unbind();
 

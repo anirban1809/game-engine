@@ -16,6 +16,7 @@
 
 #include "../../../vendor/imgui/imgui_impl_glfw.h"
 #include "../../../vendor/imgui/imgui_impl_opengl3.h"
+#include "GLFW/glfw3.h"
 #include "imgui.h"
 
 class Sandbox : public Application {
@@ -110,12 +111,24 @@ class Sandbox : public Application {
         if (key == GLFW_KEY_2) { light.UpdateLightPositionY(-0.25f); }
     }
 
+    void OnMousePressed(int button) {
+        if (button == GLFW_MOUSE_BUTTON_LEFT) {
+            std::cout << "Left mouse button clicked!" << std::endl;
+        }
+    }
+
     void OnRender() {
         container->Bind();
         container->Draw(shader->GetProgramId());
         container->Unbind();
-
-        ImGui::Begin("Light Properties", &value, ImGuiWindowFlags_MenuBar);
+        ImGuiViewport *viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(
+            ImVec2(viewport->Pos.x + 10, viewport->Pos.y + 10),
+            ImGuiCond_Always);
+        ImGui::SetNextWindowSize(ImVec2(550, 1000), ImGuiCond_Once);
+        ImGui::Begin("Project Properties", &value,
+                     ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoResize |
+                         ImGuiWindowFlags_NoMove);
         if (ImGui::BeginMenuBar()) {
             if (ImGui::BeginMenu("File")) {
                 if (ImGui::MenuItem("New Project", "Ctrl+O")) {
