@@ -18,7 +18,9 @@ class Application {
     virtual void OnUpdate(){};  // Override for updating logic
     virtual void OnRender(){};  // Override for custom rendering
     virtual void OnKeyPressed(int key) {}
-    virtual void OnMousePressed(int key) {}
+    virtual void OnMousePressed(int button) {}
+    virtual void OnMouseReleased(int button) {}
+    virtual void OnMouseMoved(double xpos, double ypos) {}
     Camera camera;
     Light light;
     Window *window;

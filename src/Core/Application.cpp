@@ -17,11 +17,18 @@ Application::Application(int width, int height, const char* title) {
         }
     });
 
-    window->SetMouseCallback([this](int button, int action) {
+    window->SetMouseButtonCallback([this](int button, int action) {
         if (action == GLFW_PRESS) {
             OnMousePressed(button);  // Call the abstracted method
         }
+
+        if (action == GLFW_RELEASE) {
+            OnMouseReleased(button);  // Call the abstracted method
+        }
     });
+
+    window->SetMouseCursorCallback(
+        [this](double xpos, double ypos) { OnMouseMoved(xpos, ypos); });
 }
 
 Application::~Application() {

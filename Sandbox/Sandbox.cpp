@@ -117,6 +117,16 @@ class Sandbox : public Application {
         }
     }
 
+    void OnMouseReleased(int button) {
+        if (button == GLFW_MOUSE_BUTTON_LEFT) {
+            std::cout << "Left mouse button released!" << std::endl;
+        }
+    }
+
+    void OnMouseMoved(double xpos, double ypos) {
+        printf("X = %0.2f, Y = %0.2f\n", xpos, ypos);
+    }
+
     void OnRender() {
         container->Bind();
         container->Draw(shader->GetProgramId());
