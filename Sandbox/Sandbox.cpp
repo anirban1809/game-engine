@@ -31,6 +31,10 @@ class Sandbox : public Application {
     std::vector<float> stage;
     std::vector<uint32> indices;
     bool value = false;
+    bool leftMouseDown = false;
+    double xPosition = 0.0f;
+    double yPosition = 0.0f;
+    bool firstMouse = false;
 
     void OnInit() {
         ObjLoader *loader = new ObjLoader();
@@ -114,17 +118,35 @@ class Sandbox : public Application {
     void OnMousePressed(int button) {
         if (button == GLFW_MOUSE_BUTTON_LEFT) {
             std::cout << "Left mouse button clicked!" << std::endl;
+            leftMouseDown = true;
+            firstMouse = true;
         }
     }
 
     void OnMouseReleased(int button) {
         if (button == GLFW_MOUSE_BUTTON_LEFT) {
             std::cout << "Left mouse button released!" << std::endl;
+            leftMouseDown = false;
         }
     }
 
     void OnMouseMoved(double xpos, double ypos) {
-        printf("X = %0.2f, Y = %0.2f\n", xpos, ypos);
+        if (leftMouseDown) {
+            if (firstMouse) {
+                xPosition = xpos;
+                yPosition = ypos;
+                firstMouse = false;
+            }
+
+            float xOffset = xpos - xPosition;
+            float yOffset = yPosition - ypos;  // Reversed y-coordinates
+            xPosition = xpos;
+            yPosition = ypos;
+
+            float sensitivity = 0.01f;  // Adjust for speed
+            camera.TranslateX(xOffset * sensitivity);
+            camera.TranslateY(yOffset * sensitivity);
+        }
     }
 
     void OnRender() {
