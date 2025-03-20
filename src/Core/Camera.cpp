@@ -47,3 +47,8 @@ void Camera::TranslateZ(float value) {
     cameraPosition[2] += value;
     UpdateView();
 }
+
+void Camera::MoveForward(float amount) {
+    cameraPosition += GetCameraLook() * amount;
+    UpdateView();
+}

@@ -13,6 +13,7 @@ class Camera {
 
     void SetCameraPosition(float x, float y, float z);
     void SetCameraLook(float x, float y, float z);
+    void MoveForward(float amount);
 
     glm::mat4 SetProjection(float fov, float aspectRatio, float near,
                             float far);

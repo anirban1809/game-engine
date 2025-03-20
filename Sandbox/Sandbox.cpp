@@ -13,7 +13,6 @@
 #include <unistd.h>
 #include "../vendor/glm/glm.hpp"
 #include "../vendor/glm/gtc/type_ptr.hpp"
-
 #include "../../../vendor/imgui/imgui_impl_glfw.h"
 #include "../../../vendor/imgui/imgui_impl_opengl3.h"
 #include "GLFW/glfw3.h"
@@ -32,9 +31,12 @@ class Sandbox : public Application {
     std::vector<uint32> indices;
     bool value = false;
     bool leftMouseDown = false;
-    double xPosition = 0.0f;
-    double yPosition = 0.0f;
+    double lastX = 0.0f;
+    double lastY = 0.0f;
     bool firstMouse = false;
+    float yaw = -90.0f;  // Initialized so that the initial front is along -Z.
+    float pitch = 0.0f;
+    float mouseSensitivity = 0.1f;
 
     void OnInit() {
         ObjLoader *loader = new ObjLoader();
@@ -100,19 +102,52 @@ class Sandbox : public Application {
     }
 
     void OnKeyPressed(int key) {
+        // Retrieve current camera position and look target.
+        glm::vec3 position = camera.GetCameraPosition();
+        glm::vec3 look = camera.GetCameraLook();
+
+        // Calculate forward vector (direction the camera is facing)
+        glm::vec3 forward = glm::normalize(look - position);
+        // Compute right vector from forward and world up vector.
+        glm::vec3 right =
+            glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
+
         if (key == GLFW_KEY_UP) { camera.TranslateZ(-0.25f); }
         if (key == GLFW_KEY_DOWN) { camera.TranslateZ(0.25f); }
         if (key == GLFW_KEY_LEFT) { camera.TranslateX(-0.25f); }
         if (key == GLFW_KEY_RIGHT) { camera.TranslateX(0.25f); }
 
-        if (key == GLFW_KEY_W) { light.UpdateLightPositionX(0.25f); }
-        if (key == GLFW_KEY_S) { light.UpdateLightPositionX(-0.25f); }
+        if (key == GLFW_KEY_W) {
+            std::cout << "Moving Forward" << std::endl;
+            glm::vec3 delta = forward * 0.5f;
+            camera.SetCameraPosition(position.x + delta.x, position.y + delta.y,
+                                     position.z + delta.z);
+            camera.SetCameraLook(look.x + delta.x, look.y + delta.y,
+                                 look.z + delta.z);
+        }
+        if (key == GLFW_KEY_S) {
+            glm::vec3 delta = forward * 0.5f;
+            camera.SetCameraPosition(position.x - delta.x, position.y - delta.y,
+                                     position.z - delta.z);
+            camera.SetCameraLook(look.x - delta.x, look.y - delta.y,
+                                 look.z - delta.z);
+        }
 
-        if (key == GLFW_KEY_A) { light.UpdateLightPositionZ(0.25f); }
-        if (key == GLFW_KEY_D) { light.UpdateLightPositionZ(-0.25f); }
+        if (key == GLFW_KEY_A) {
+            glm::vec3 delta = right * 0.5f;
+            camera.SetCameraPosition(position.x - delta.x, position.y - delta.y,
+                                     position.z - delta.z);
+            camera.SetCameraLook(look.x - delta.x, look.y - delta.y,
+                                 look.z - delta.z);
+        }
 
-        if (key == GLFW_KEY_1) { light.UpdateLightPositionY(0.25f); }
-        if (key == GLFW_KEY_2) { light.UpdateLightPositionY(-0.25f); }
+        if (key == GLFW_KEY_D) {
+            glm::vec3 delta = right * 0.5f;
+            camera.SetCameraPosition(position.x + delta.x, position.y + delta.y,
+                                     position.z + delta.z);
+            camera.SetCameraLook(look.x + delta.x, look.y + delta.y,
+                                 look.z + delta.z);
+        }
     }
 
     void OnMousePressed(int button) {
@@ -131,22 +166,47 @@ class Sandbox : public Application {
     }
 
     void OnMouseMoved(double xpos, double ypos) {
-        if (leftMouseDown) {
-            if (firstMouse) {
-                xPosition = xpos;
-                yPosition = ypos;
-                firstMouse = false;
-            }
+        if (!leftMouseDown) { return; }
 
-            float xOffset = xpos - xPosition;
-            float yOffset = yPosition - ypos;  // Reversed y-coordinates
-            xPosition = xpos;
-            yPosition = ypos;
-
-            float sensitivity = 0.01f;  // Adjust for speed
-            camera.TranslateX(xOffset * sensitivity);
-            camera.TranslateY(yOffset * sensitivity);
+        if (firstMouse) {
+            // On the first mouse event, initialize the last positions.
+            lastX = (float)xpos;
+            lastY = (float)ypos;
+            firstMouse = false;
+            return;
         }
+
+        // Calculate the offset from the last frame.
+        float xoffset = -(float)xpos + lastX;
+        float yoffset =
+            -lastY + (float)ypos;  // reversed: moving up is positive
+
+        lastX = (float)xpos;
+        lastY = (float)ypos;
+
+        // Scale offsets by sensitivity.
+        xoffset *= mouseSensitivity;
+        yoffset *= mouseSensitivity;
+
+        // Update yaw and pitch.
+        yaw += xoffset;
+        pitch += yoffset;
+
+        // Constrain pitch to prevent flipping.
+        if (pitch > 89.0f) pitch = 89.0f;
+        if (pitch < -89.0f) pitch = -89.0f;
+
+        // Compute the new front direction.
+        glm::vec3 front;
+        front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+        front.y = sin(glm::radians(pitch));
+        front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+        front = glm::normalize(front);
+
+        // Update the camera look target.
+        // (Camera look = camera position + front vector)
+        glm::vec3 newLook = camera.GetCameraPosition() + front;
+        camera.SetCameraLook(newLook.x, newLook.y, newLook.z);
     }
 
     void OnRender() {
