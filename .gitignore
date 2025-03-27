@@ -1,3 +1,6 @@
 build
 Makefile
 .cache
+lib/CMakeFiles
+editor/CMakeFiles
+editor/models

@@ -1,0 +1,7 @@
+{
+  "clangd.arguments": [
+    "--compile-commands-dir=build",
+    "--header-insertion=never"
+  ],
+  "C_Cpp.default.cppStandard": "c++17"  // Optional: fallback for IntelliSense
+}
