@@ -36,17 +36,33 @@ class Editor : public Application {
     UIEngine uiEngine;
     ImGuiLayer *imGuiBackend;
     FrameBuffer *scenebuffer;
+    ImGuiState state;
+    std::unique_ptr<FramebufferPanel> fbPanel;
 
     void OnInit() {
-        scenebuffer = new FrameBuffer(1920.0f, 1080.0f);
+        GLFWmonitor *primary = glfwGetPrimaryMonitor();
+        if (!primary) {
+            std::cerr << "Failed to get primary monitor!" << std::endl;
+            return;
+        }
+
+        // Step 2: Get monitor work area
+        int x, y, width, height;
+        glfwGetMonitorWorkarea(primary, &x, &y, &width, &height);
+
+        // Step 3: Print it
+        std::cout << "Usable screen area: " << width << "x" << height
+                  << " at position (" << x << ", " << y << ")" << std::endl;
+
+        scenebuffer = new FrameBuffer(1000.0f, 1000.0f);
         uiEngine.Init(window->GetGLFWWindow());
 
-        uiEngine.GetUIManager().AddPanel(CreatePanel<ExamplePanel>("Example1"));
-        uiEngine.GetUIManager().AddPanel(CreatePanel<ExamplePanel>("Example2"));
+        fbPanel = CreatePanel<FramebufferPanel>("Scene", state, scenebuffer,
+                                                glm::vec2(1920.0f, 1080.0f));
 
-        uiEngine.GetUIManager().AddPanel(CreatePanel<FramebufferPanel>(
-            "Scene", scenebuffer->GetFrameTexture(),
-            glm::vec2(1920.0f, 1080.0f)));
+        uiEngine.GetUIManager().AddPanel(std::move(fbPanel));
+        uiEngine.GetUIManager().AddPanel(
+            CreatePanel<ExamplePanel>("Value", state));
 
         ObjLoader *loader = new ObjLoader();
 
@@ -124,11 +140,6 @@ class Editor : public Application {
         glm::vec3 right =
             glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
 
-        if (key == GLFW_KEY_UP) { camera.TranslateZ(-0.25f); }
-        if (key == GLFW_KEY_DOWN) { camera.TranslateZ(0.25f); }
-        if (key == GLFW_KEY_LEFT) { camera.TranslateX(-0.25f); }
-        if (key == GLFW_KEY_RIGHT) { camera.TranslateX(0.25f); }
-
         if (key == KeyEvent::KEY_W) {
             std::cout << "Moving Forward" << std::endl;
             glm::vec3 delta = forward * movementSpeed;
@@ -145,7 +156,7 @@ class Editor : public Application {
                                  look.z - delta.z);
         }
 
-        if (key == GLFW_KEY_A) {
+        if (key == KeyEvent::KEY_A) {
             glm::vec3 delta = right * movementSpeed;
             camera.SetCameraPosition(position.x - delta.x, position.y - delta.y,
                                      position.z - delta.z);
@@ -153,7 +164,7 @@ class Editor : public Application {
                                  look.z - delta.z);
         }
 
-        if (key == GLFW_KEY_D) {
+        if (key == KeyEvent::KEY_D) {
             glm::vec3 delta = right * movementSpeed;
             camera.SetCameraPosition(position.x + delta.x, position.y + delta.y,
                                      position.z + delta.z);
@@ -163,6 +174,7 @@ class Editor : public Application {
     }
 
     void OnMousePressed(int button) {
+        if (!state.isFrameBufferPanelHovered) { return; }
         if (button == MouseEvent::MOUSE_BUTTON_LEFT) {
             std::cout << "Left mouse button clicked!" << std::endl;
             leftMouseDown = true;
@@ -171,6 +183,7 @@ class Editor : public Application {
     }
 
     void OnMouseReleased(int button) {
+        if (!state.isFrameBufferPanelHovered) { return; }
         if (button == MouseEvent::MOUSE_BUTTON_LEFT) {
             std::cout << "Left mouse button released!" << std::endl;
             leftMouseDown = false;
@@ -224,14 +237,18 @@ class Editor : public Application {
     void OnUpdate() {}
 
     void OnRender() {
-        uiEngine.BeginFrame();
-        uiEngine.RenderPanels();
-        uiEngine.EndFrame();
-
+        std::cout << "Hovered: " << state.isFrameBufferPanelHovered
+                  << std::endl;
         scenebuffer->Bind();
+        scenebuffer->Clear();
         container->Bind();
         container->Draw(shader->GetProgramId());
         container->Unbind();
+
         scenebuffer->Unbind();
+
+        uiEngine.BeginFrame();
+        uiEngine.RenderPanels();
+        uiEngine.EndFrame();
     }
 };

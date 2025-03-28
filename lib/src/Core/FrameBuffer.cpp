@@ -54,6 +54,10 @@ void FrameBuffer::RescaleFrameBuffer(float width, float height) {
                               GL_RENDERBUFFER, rbo);
 }
 
+void FrameBuffer::Clear() const {
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+}
+
 void FrameBuffer::Bind() const { glBindFramebuffer(GL_FRAMEBUFFER, fbo); }
 
 void FrameBuffer::Unbind() const { glBindFramebuffer(GL_FRAMEBUFFER, 0); }

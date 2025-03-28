@@ -8,7 +8,7 @@ void ImGuiLayer::Init(void* windowHandle) {
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |=
-        ImGuiConfigFlags_DockingEnable | ImGuiConfigFlags_ViewportsEnable;
+        ImGuiConfigFlags_ViewportsEnable | ImGuiConfigFlags_DockingEnable;
 
     ImFont* customFont = io.Fonts->AddFontFromFileTTF(
         "/Users/anirban/Downloads/NotoSans-Regular.ttf", 20.0f);
@@ -86,6 +86,8 @@ void ImGuiLayer::Init(void* windowHandle) {
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glslVersion);
 }
+
+ImGuiIO ImGuiLayer::GetIO() { return ImGui::GetIO(); }
 
 void ImGuiLayer::BeginFrame() {
     ImGui_ImplOpenGL3_NewFrame();

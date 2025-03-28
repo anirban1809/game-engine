@@ -10,6 +10,7 @@ class FrameBuffer {
     void RescaleFrameBuffer(float width, float height);
     void Bind() const;
     void Unbind() const;
+    void Clear() const;
 
    private:
     uint32 fbo;
