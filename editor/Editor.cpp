@@ -5,6 +5,7 @@
 #include "Core/Logger.h"
 #include "UI/UIEngine.h"
 #include "UI/ImGui/ImGuiLayer.h"
+#include "UI/ImGui/ImGuiLayoutContainer.h"
 
 #include "UI/ImGui/Panels/ExamplePanel.h"
 #include "UI/ImGui/Panels/FrameBufferPanel.h"
@@ -37,7 +38,7 @@ class Editor : public Application {
     ImGuiLayer *imGuiBackend;
     FrameBuffer *scenebuffer;
     ImGuiState state;
-    std::unique_ptr<FramebufferPanel> fbPanel;
+    std::shared_ptr<FramebufferPanel> fbPanel;
 
     void OnInit() {
         GLFWmonitor *primary = glfwGetPrimaryMonitor();
@@ -57,19 +58,28 @@ class Editor : public Application {
         scenebuffer = new FrameBuffer(1000.0f, 1000.0f);
         uiEngine.Init(window->GetGLFWWindow());
 
-        fbPanel = CreatePanel<FramebufferPanel>("Scene", state, scenebuffer,
-                                                glm::vec2(1920.0f, 1080.0f));
+        std::shared_ptr<ImGuiLayoutContainer> lc =
+            CreateLayoutContainer<ImGuiLayoutContainer>(1, 4);
 
-        uiEngine.GetUIManager().AddPanel(std::move(fbPanel));
-        uiEngine.GetUIManager().AddPanel(
-            CreatePanel<ExamplePanel>("Value", state));
+        lc->SetGap(20.0f);
+
+        lc->AddPanel(CreatePanel<ExamplePanel>("Scene Properties", state), 1);
+        lc->AddPanel(CreatePanel<FramebufferPanel>("Scene", state, scenebuffer,
+                                                   glm::vec2(1920.0f, 1080.0f),
+                                                   glm::vec2(0, 0)),
+                     2);
+        lc->AddPanel(CreatePanel<ExamplePanel>("Item Property", state), 1);
+
+        uiEngine.GetUIManager().AddLayoutContainer(lc);
 
         ObjLoader *loader = new ObjLoader();
 
         loader->LoadObjectFile(
-            "/Users/anirban/Documents/Code/engine/editor/models/testscene.obj");
+            "/Users/anirban/Documents/Code/engine/editor/models/"
+            "testscene.obj");
         loader->LoadMaterialFile(
-            "/Users/anirban/Documents/Code/engine/editor/models/testscene.mtl");
+            "/Users/anirban/Documents/Code/engine/editor/models/"
+            "testscene.mtl");
 
         std::vector<float> allvertices;
         std::vector<uint32> allIndices;
@@ -237,8 +247,6 @@ class Editor : public Application {
     void OnUpdate() {}
 
     void OnRender() {
-        std::cout << "Hovered: " << state.isFrameBufferPanelHovered
-                  << std::endl;
         scenebuffer->Bind();
         scenebuffer->Clear();
         container->Bind();

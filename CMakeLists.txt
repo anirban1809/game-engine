@@ -49,7 +49,7 @@ set(QT_FORCE_WARN_APPLE_SDK_AND_XCODE_CHECK ON CACHE BOOL "" FORCE)
 # set(CMAKE_BUILD_TYPE Release)  # Ensures Release mode
 # set(CMAKE_CXX_FLAGS_RELEASE "-O3")  # Enable optimizations
 set(CMAKE_BUILD_TYPE Debug)  # Ensures Debug mode
-set(CMAKE_CXX_FLAGS_DEBUG "-g -O3")  # Add debug symbols and disable optimizations
+set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")  # Add debug symbols and disable optimizations
 
 # Add internal projects
 add_subdirectory(lib)

@@ -10,6 +10,7 @@ class UIEngine {
     void Init(void* windowHandle);
     void BeginFrame();
     void RenderPanels();
+    void RenderLayoutContainers();
     void EndFrame();
     void Shutdown();
     UIManager& GetUIManager();

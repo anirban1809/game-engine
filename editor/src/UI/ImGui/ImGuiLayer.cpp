@@ -6,15 +6,36 @@ void ImGuiLayer::Init(void* windowHandle) {
     window = static_cast<GLFWwindow*>(windowHandle);
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
+
+    float xscale, yscale;
+    glfwGetWindowContentScale(window, &xscale,
+                              &yscale);  // xscale = 2.0 on Retina
+    float scale = xscale;                // usually same for x and y
+
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |=
         ImGuiConfigFlags_ViewportsEnable | ImGuiConfigFlags_DockingEnable;
 
+    io.Fonts->Clear();  // clear previous fonts
+
+    float fontSize = 10.0f * scale;
+
     ImFont* customFont = io.Fonts->AddFontFromFileTTF(
-        "/Users/anirban/Downloads/NotoSans-Regular.ttf", 20.0f);
+        "/Users/anirban/Downloads/Roboto-Regular.ttf", fontSize);
+    io.Fonts->Build();
     if (customFont == nullptr) {
         fprintf(stderr, "Could not load custom font!\n");
     }
+
+    int display_w, display_h;
+    glfwGetFramebufferSize(window, &display_w, &display_h);
+    int window_w, window_h;
+    glfwGetWindowSize(window, &window_w, &window_h);
+
+    float fb_scale_x = (float)display_w / window_w;
+    float fb_scale_y = (float)display_h / window_h;
+
+    io.DisplayFramebufferScale = ImVec2(fb_scale_x, fb_scale_y);
 
     io.FontDefault = customFont;
     ImGui::StyleColorsDark();

@@ -1,5 +1,6 @@
 #include "../../../../include/UI/ImGui/Panels/ExamplePanel.h"
 #include "../../../../../vendor/imgui/imgui.h"
+#include <iostream>
 
 ExamplePanel::ExamplePanel(const std::string& name, ImGuiState& state)
     : panelName(name), state(state) {}
@@ -16,6 +17,22 @@ void ExamplePanel::Render() {
     }
 
     ImGui::SliderFloat("Slider", &sliderValue, 0.0f, 1.0f);
+
+    if (ImGui::CollapsingHeader("Settings")) {
+        ImGui::Text("Some setting here");
+        // ImGui::Checkbox("Enable feature", &enabled);
+    }
+
+    if (ImGui::TreeNode("Node 1")) {
+        ImGui::Text("This is inside Node 1");
+
+        if (ImGui::TreeNode("Child Node")) {
+            ImGui::Text("Nested inside Child Node");
+            ImGui::TreePop();
+        }
+
+        ImGui::TreePop();
+    }
 
     if (showDetails) { ImGui::Text("Current value: %.2f", sliderValue); }
 

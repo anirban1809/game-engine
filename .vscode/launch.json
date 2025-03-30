@@ -8,7 +8,7 @@
         "type": "lldb",
         "request": "launch",
         "name": "Launch and Attach",
-        "program": "${workspaceFolder}/build/release",
+        "program": "${workspaceFolder}/build/editor/release",
         "args": [],
         "cwd": "${workspaceFolder}"
     }
