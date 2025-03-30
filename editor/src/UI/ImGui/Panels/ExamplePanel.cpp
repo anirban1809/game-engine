@@ -1,12 +1,13 @@
 #include "../../../../include/UI/ImGui/Panels/ExamplePanel.h"
 #include "../../../../../vendor/imgui/imgui.h"
+#include "../../../../include/UI/ApplicationState.h"
 #include <iostream>
 
-ExamplePanel::ExamplePanel(const std::string& name, ImGuiState& state)
+ExamplePanel::ExamplePanel(const std::string& name, ApplicationState& state)
     : panelName(name), state(state) {}
 
 std::unique_ptr<ExamplePanel> CreatePanel(const std::string& panelName,
-                                          ImGuiState state) {
+                                          ApplicationState& state) {
     return std::make_unique<ExamplePanel>(panelName, state);
 }
 

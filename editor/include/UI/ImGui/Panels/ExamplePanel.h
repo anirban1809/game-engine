@@ -3,17 +3,18 @@
 
 #include "../ImGuiPanel.h"
 #include "../ImGuiLayer.h"
+#include "../../ApplicationState.h"
 #include <string>
 
 class ExamplePanel : public ImGuiPanel {
    public:
-    ExamplePanel(const std::string& panelName, ImGuiState& state);
+    ExamplePanel(const std::string& panelName, ApplicationState& state);
     ~ExamplePanel() override = default;
 
     void Render() override;
 
    private:
-    ImGuiState state;
+    ApplicationState state;
     std::string panelName;
     bool showDetails = false;
     float sliderValue = 0.5f;

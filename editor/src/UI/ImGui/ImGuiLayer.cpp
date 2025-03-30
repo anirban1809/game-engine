@@ -1,6 +1,10 @@
 
 #include "../../../include/UI/ImGui/ImGuiLayer.h"
+#include "../../../include/UI/ApplicationState.h"
 #include <cstdio>
+#include <iostream>
+
+ImGuiLayer::ImGuiLayer(ApplicationState s) { state = s; }
 
 void ImGuiLayer::Init(void* windowHandle) {
     window = static_cast<GLFWwindow*>(windowHandle);
@@ -114,6 +118,39 @@ void ImGuiLayer::BeginFrame() {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplGlfw_NewFrame();
     ImGui::NewFrame();
+
+    if (ImGui::BeginMainMenuBar()) {
+        if (ImGui::BeginMenu("Scene")) {
+            if (ImGui::MenuItem("New")) {
+                std::cout << "Create New Project" << std::endl;
+            }
+            if (ImGui::MenuItem("Open")) { /* action */
+            }
+
+            if (ImGui::MenuItem("Load Object")) { /* action */
+            }
+
+            ImGui::Separator();
+
+            if (ImGui::MenuItem("Save")) { /* action */
+            }
+
+            if (ImGui::MenuItem("Save As")) { /* action */
+            }
+
+            if (ImGui::MenuItem("Exit")) { /* action */
+            }
+            ImGui::EndMenu();
+        }
+        if (ImGui::BeginMenu("Edit")) {
+            if (ImGui::MenuItem("Undo", "CTRL+Z")) { /* action */
+                std::cout << "State = " << state.stateValue << std::endl;
+            }
+            ImGui::EndMenu();
+        }
+
+        ImGui::EndMainMenuBar();
+    }
 }
 
 void ImGuiLayer::EndFrame() {

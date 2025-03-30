@@ -6,12 +6,12 @@
 #include "../../../../../lib/include/Core/FrameBuffer.h"
 #define GL_SILENCE_DEPRECATION
 #include "../ImGuiLayer.h"
+#include "../../ApplicationState.h"
 
 class FramebufferPanel : public ImGuiPanel {
    public:
-    FramebufferPanel(const std::string& title, ImGuiState& state,
-                     FrameBuffer* sceneBuffer, const glm::ivec2& size,
-                     const glm::vec2 position);
+    FramebufferPanel(const std::string& title, ApplicationState& state,
+                     FrameBuffer* sceneBuffer);
     void Render() override;
 
     void SetTexture(unsigned int id, const glm::ivec2& size);
@@ -20,7 +20,7 @@ class FramebufferPanel : public ImGuiPanel {
     glm::ivec2 GetMouseFramebufferCoords() const;
 
    private:
-    ImGuiState& state;
+    ApplicationState& state;
     std::string title;
     FrameBuffer* sceneBuffer;
     glm::ivec2 textureSize;

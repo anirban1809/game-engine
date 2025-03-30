@@ -6,7 +6,7 @@
 #include "../../vendor/imgui/imgui.h"
 #include "../../vendor/imgui/imgui_impl_opengl3.h"
 #include "../../vendor/imgui/imgui_impl_glfw.h"
-
+#include "../ApplicationState.h"
 class ImGuiState {
    public:
     bool isFrameBufferPanelHovered = false;
@@ -14,6 +14,7 @@ class ImGuiState {
 
 class ImGuiLayer : public UIBackend {
    public:
+    ImGuiLayer(ApplicationState);
     void Init(void* windowHandle) override;
     ImGuiIO GetIO();
     void BeginFrame() override;
@@ -23,6 +24,6 @@ class ImGuiLayer : public UIBackend {
    private:
     GLFWwindow* window = nullptr;
     const char* glslVersion = "#version 330";
-    ImGuiState state;
+    ApplicationState state;
 };
 #endif  // __IMGUILAYER_H__

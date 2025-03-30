@@ -2,13 +2,13 @@
 #include "../../../../../vendor/imgui/imgui.h"
 #include "../../../../../lib/include/Core/FrameBuffer.h"
 #include "../../../../../vendor/glfw-3.4.bin.MACOS/include/GLFW/glfw3.h"
+#include "../../../../include/UI/ApplicationState.h"
 #include <iostream>
 
-FramebufferPanel::FramebufferPanel(const std::string& title, ImGuiState& state,
-                                   FrameBuffer* sceneBuffer,
-                                   const glm::ivec2& size,
-                                   const glm::vec2 position)
-    : title(title), sceneBuffer(sceneBuffer), textureSize(size), state(state) {}
+FramebufferPanel::FramebufferPanel(const std::string& title,
+                                   ApplicationState& state,
+                                   FrameBuffer* sceneBuffer)
+    : title(title), sceneBuffer(sceneBuffer), state(state) {}
 
 void FramebufferPanel::SetTexture(unsigned int id, const glm::ivec2& size) {
     textureID = sceneBuffer->GetFrameTexture();

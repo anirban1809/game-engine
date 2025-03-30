@@ -19,9 +19,11 @@ void ImGuiLayoutContainer::Render() {
 
     int N = rows;     // total rows
     int M = columns;  // total columns
+    float G = gap;    // gap in pixels
 
-    float cellWidth = W / M;
-    float cellHeight = H / N;
+    // Total gaps in layout: (M+1) vertical and (N+1) horizontal
+    float cellWidth = (W - G * (M + 1)) / M;
+    float cellHeight = (H - G * (N + 1)) / N;
 
     int row = 0;
     int col = 0;
@@ -39,15 +41,18 @@ void ImGuiLayoutContainer::Render() {
         // If we're out of rows, stop rendering
         if (row >= N) break;
 
-        float xpos = col * cellWidth;
-        float ypos = row * cellHeight;
-        float width = colSpan * cellWidth;
+        // Calculate position with gaps
+        float xpos = G + col * (cellWidth + G);
+        float ypos = G + row * (cellHeight + G);
+        float width = colSpan * cellWidth + (colSpan - 1) * G;
         float height = cellHeight;
 
+        float yOffset = row == 0 ? 25.0f : 0.0f;
+
         ImGui::SetNextWindowPos(
-            ImVec2(viewport->Pos.x + xpos, viewport->Pos.y + ypos),
+            ImVec2(viewport->Pos.x + xpos, viewport->Pos.y + ypos + yOffset),
             ImGuiCond_Always);
-        ImGui::SetNextWindowSize(ImVec2(width, height));
+        ImGui::SetNextWindowSize(ImVec2(width, height - yOffset));
 
         panel->Render();
 

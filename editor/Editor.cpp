@@ -6,8 +6,11 @@
 #include "UI/UIEngine.h"
 #include "UI/ImGui/ImGuiLayer.h"
 #include "UI/ImGui/ImGuiLayoutContainer.h"
+#include "UI/ApplicationState.h"
 
 #include "UI/ImGui/Panels/ExamplePanel.h"
+#include "UI/ImGui/Panels/ScenePropsPanel.h"
+#include "UI/ImGui/Panels/NodePropsPanel.h"
 #include "UI/ImGui/Panels/FrameBufferPanel.h"
 
 #include <filesystem>
@@ -18,7 +21,7 @@ class Editor : public Application {
    public:
     Editor(int width, int height, const char *title)
         : Application(width, height, title),
-          uiEngine(std::move(std::make_unique<ImGuiLayer>())) {}
+          uiEngine(std::move(std::make_unique<ImGuiLayer>(state))) {}
 
    protected:
     VertexContainer *container;
@@ -37,7 +40,7 @@ class Editor : public Application {
     UIEngine uiEngine;
     ImGuiLayer *imGuiBackend;
     FrameBuffer *scenebuffer;
-    ImGuiState state;
+    ApplicationState state;
     std::shared_ptr<FramebufferPanel> fbPanel;
 
     void OnInit() {
@@ -59,16 +62,14 @@ class Editor : public Application {
         uiEngine.Init(window->GetGLFWWindow());
 
         std::shared_ptr<ImGuiLayoutContainer> lc =
-            CreateLayoutContainer<ImGuiLayoutContainer>(1, 4);
+            CreateLayoutContainer<ImGuiLayoutContainer>(1, 12);
 
-        lc->SetGap(20.0f);
+        lc->SetGap(10.0f);
 
-        lc->AddPanel(CreatePanel<ExamplePanel>("Scene Properties", state), 1);
-        lc->AddPanel(CreatePanel<FramebufferPanel>("Scene", state, scenebuffer,
-                                                   glm::vec2(1920.0f, 1080.0f),
-                                                   glm::vec2(0, 0)),
-                     2);
-        lc->AddPanel(CreatePanel<ExamplePanel>("Item Property", state), 1);
+        lc->AddPanel(CreatePanel<ScenePropsPanel>(state), 3);
+        lc->AddPanel(CreatePanel<FramebufferPanel>("Scene", state, scenebuffer),
+                     7);
+        lc->AddPanel(CreatePanel<NodePropsPanel>(state), 2);
 
         uiEngine.GetUIManager().AddLayoutContainer(lc);
 
@@ -133,7 +134,7 @@ class Editor : public Application {
         camera.SetCameraLook(0.0f, 0.0f, 0.0f);
 
         light.SetColor(glm::vec3(1.0f, 1.0f, 1.0f));
-        light.SetPosition(glm::vec3(0.0, 100.0, 0.0));
+        light.SetPosition(glm::vec3(0.0, 15.0, 0.0));
 
         container->AttachCamera(&camera);
         container->AttachLight(&light);
