@@ -5,6 +5,7 @@
 NodePropsPanel::NodePropsPanel(ApplicationState& s) : state(s) {}
 
 void NodePropsPanel::Render() {
+    SetPositionAndSize();
     ImGui::Begin("Node Properties");
     ImGui::Text("Currently Selected: %s",
                 state.nodes[state.selectedNode].c_str());

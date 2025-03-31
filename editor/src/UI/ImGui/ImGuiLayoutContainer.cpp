@@ -8,14 +8,24 @@ ImGuiLayoutContainer::ImGuiLayoutContainer(int r, int c)
     : LayoutContainer(r, c) {}
 
 void ImGuiLayoutContainer::Render() {
-    ImGuiViewport* viewport = ImGui::GetMainViewport();
-    ImVec2 globalPosition = ImGui::GetWindowPos();
-    ImVec2 glfwPos = viewport->Pos;
-    ImVec2 relativePos(globalPosition.x - glfwPos.x,
-                       globalPosition.y - glfwPos.y);
+    float X, Y, W, H;
+    if (!isChildElement) {
+        ImGuiViewport* viewport = ImGui::GetMainViewport();
+        ImVec2 globalPosition = ImGui::GetWindowPos();
+        ImVec2 glfwPos = viewport->Pos;
+        ImVec2 relativePos(globalPosition.x - glfwPos.x,
+                           globalPosition.y - glfwPos.y);
 
-    float W = viewport->Size.x;
-    float H = viewport->Size.y;
+        X = viewport->Pos.x;
+        Y = viewport->Pos.y;
+        W = viewport->Size.x;
+        H = viewport->Size.y;
+    } else {
+        X = xposition;
+        Y = yposition;
+        W = width;
+        H = height;
+    }
 
     int N = rows;     // total rows
     int M = columns;  // total columns
@@ -29,7 +39,7 @@ void ImGuiLayoutContainer::Render() {
     int col = 0;
 
     int i = 1;
-    for (const auto& panel : panels) {
+    for (const auto& panel : elements) {
         int colSpan = colspans[i - 1];
 
         // Wrap to next row if the current panel can't fit in remaining columns
@@ -44,15 +54,16 @@ void ImGuiLayoutContainer::Render() {
         // Calculate position with gaps
         float xpos = G + col * (cellWidth + G);
         float ypos = G + row * (cellHeight + G);
-        float width = colSpan * cellWidth + (colSpan - 1) * G;
-        float height = cellHeight;
+        float w = colSpan * cellWidth + (colSpan - 1) * G;
+        float h = cellHeight;
 
-        float yOffset = row == 0 ? 25.0f : 0.0f;
+        float yOffset = row == 0 ? 14.0f : 0.0f;
 
-        ImGui::SetNextWindowPos(
-            ImVec2(viewport->Pos.x + xpos, viewport->Pos.y + ypos + yOffset),
-            ImGuiCond_Always);
-        ImGui::SetNextWindowSize(ImVec2(width, height - yOffset));
+        panel->SetXPosition(X + xpos);
+        panel->SetYPosition(Y + ypos + yOffset);
+
+        panel->SetHeight(h - yOffset);
+        panel->SetWidth(w);
 
         panel->Render();
 

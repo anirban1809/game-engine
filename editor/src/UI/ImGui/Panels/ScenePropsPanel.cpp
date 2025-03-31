@@ -4,6 +4,7 @@
 ScenePropsPanel::ScenePropsPanel(ApplicationState& s) : state(s) {}
 
 void ScenePropsPanel::Render() {
+    SetPositionAndSize();
     ImGui::Begin("Scene Properties");
 
     for (int i = 0; i < state.nodes.size(); i++) {

@@ -1,7 +1,7 @@
 #ifndef __LAYOUTCONTAINER_H__
 #define __LAYOUTCONTAINER_H__
 
-#include "UIPanel.h"
+#include "UIElement.h"
 
 #include <vector>
 #include <memory>
@@ -9,22 +9,23 @@
 
 enum FlowDirection { FLOW_HORIZONTAL, FLOW_VERTICAL };
 
-class LayoutContainer {
+class LayoutContainer : public UIElement {
    public:
     LayoutContainer(int, int);
-    void AddPanel(std::shared_ptr<UIPanel> panel, int);
-    virtual void Render();
+    void AddElement(std::shared_ptr<UIElement> panel, int);
+    void Render() override;
 
     void SetFlowDirection(FlowDirection direction);
+
     void SetGap(float);
     std::string name;
 
    protected:
-    std::vector<std::shared_ptr<UIPanel>> panels;
-    float gap;
-    int rows;
-    int columns;
+    std::vector<std::shared_ptr<UIElement>> elements;
     std::vector<int> colspans;
+    float gap;
+    float rows;
+    float columns;
 
    private:
     FlowDirection direction = FlowDirection::FLOW_HORIZONTAL;

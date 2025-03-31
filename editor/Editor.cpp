@@ -43,7 +43,36 @@ class Editor : public Application {
     ApplicationState state;
     std::shared_ptr<FramebufferPanel> fbPanel;
 
+    void DefineUI() {
+        std::shared_ptr<ImGuiLayoutContainer> lc =
+            CreateLayoutContainer<ImGuiLayoutContainer>(1, 13);
+
+        lc->SetGap(10.0f);
+
+        std::shared_ptr<ImGuiLayoutContainer> lc1 =
+            CreateLayoutContainer<ImGuiLayoutContainer>(2, 1);
+        std::shared_ptr<ImGuiLayoutContainer> lc2 =
+            CreateLayoutContainer<ImGuiLayoutContainer>(1, 1);
+        std::shared_ptr<ImGuiLayoutContainer> lc3 =
+            CreateLayoutContainer<ImGuiLayoutContainer>(1, 1);
+
+        lc1->AddElement(CreatePanel<ScenePropsPanel>(state), 1);
+        lc1->AddElement(CreatePanel<ExamplePanel>("File Browser", state), 1);
+
+        lc2->AddElement(
+            CreatePanel<FramebufferPanel>("Scene", state, scenebuffer), 1);
+        lc3->AddElement(CreatePanel<NodePropsPanel>(state), 1);
+
+        lc->AddElement(lc1, 3);
+        lc->AddElement(lc2, 8);
+        lc->AddElement(lc3, 2);
+
+        uiEngine.GetUIManager().AddLayoutContainer(lc);
+    }
+
     void OnInit() {
+        scenebuffer = new FrameBuffer(1000.0f, 1000.0f);
+        uiEngine.Init(window->GetGLFWWindow());
         GLFWmonitor *primary = glfwGetPrimaryMonitor();
         if (!primary) {
             std::cerr << "Failed to get primary monitor!" << std::endl;
@@ -58,20 +87,7 @@ class Editor : public Application {
         std::cout << "Usable screen area: " << width << "x" << height
                   << " at position (" << x << ", " << y << ")" << std::endl;
 
-        scenebuffer = new FrameBuffer(1000.0f, 1000.0f);
-        uiEngine.Init(window->GetGLFWWindow());
-
-        std::shared_ptr<ImGuiLayoutContainer> lc =
-            CreateLayoutContainer<ImGuiLayoutContainer>(1, 12);
-
-        lc->SetGap(10.0f);
-
-        lc->AddPanel(CreatePanel<ScenePropsPanel>(state), 3);
-        lc->AddPanel(CreatePanel<FramebufferPanel>("Scene", state, scenebuffer),
-                     7);
-        lc->AddPanel(CreatePanel<NodePropsPanel>(state), 2);
-
-        uiEngine.GetUIManager().AddLayoutContainer(lc);
+        DefineUI();
 
         ObjLoader *loader = new ObjLoader();
 

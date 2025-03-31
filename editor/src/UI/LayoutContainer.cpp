@@ -6,13 +6,15 @@ LayoutContainer::LayoutContainer(int r, int c) {
     columns = c;
 }
 
-void LayoutContainer::AddPanel(std::shared_ptr<UIPanel> panel, int colspan) {
-    panels.emplace_back(panel);
+void LayoutContainer::AddElement(std::shared_ptr<UIElement> element,
+                                 int colspan) {
+    element->SetIsChildElement(true);
+    elements.emplace_back(element);
     colspans.emplace_back(colspan);
 }
 
 void LayoutContainer::Render() {
-    for (const auto& panel : panels) { panel->Render(); }
+    for (const auto& element : elements) { element->Render(); }
 }
 
 void LayoutContainer::SetFlowDirection(FlowDirection _direction) {

@@ -16,6 +16,7 @@ void FramebufferPanel::SetTexture(unsigned int id, const glm::ivec2& size) {
 }
 
 void FramebufferPanel::Render() {
+    SetPositionAndSize();
     ImGui::Begin(title.c_str(), nullptr);
     state.isFrameBufferPanelHovered = ImGui::IsWindowHovered();
 

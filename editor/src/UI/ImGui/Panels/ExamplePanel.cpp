@@ -12,6 +12,7 @@ std::unique_ptr<ExamplePanel> CreatePanel(const std::string& panelName,
 }
 
 void ExamplePanel::Render() {
+    SetPositionAndSize();
     ImGui::Begin(panelName.c_str());
     if (ImGui::Checkbox("Show Details", &showDetails)) {
         // You could trigger events or log state here

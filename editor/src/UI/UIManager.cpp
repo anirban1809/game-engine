@@ -3,12 +3,12 @@
 #include "../../include/UI/LayoutContainer.h"
 #include <iostream>
 
-void UIManager::AddPanel(std::shared_ptr<UIPanel> panel) {
+void UIManager::AddPanel(std::shared_ptr<UIElement> panel) {
     panels.emplace_back(panel);
 }
 
 void UIManager::Render() {
-    for (const std::shared_ptr<UIPanel>& panel : panels) { panel->Render(); }
+    for (const std::shared_ptr<UIElement>& panel : panels) { panel->Render(); }
     for (std::shared_ptr<LayoutContainer>& container : containers) {
         container->Render();
     }

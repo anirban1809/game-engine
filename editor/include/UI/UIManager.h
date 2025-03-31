@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <memory>
-#include "UIPanel.h"
+#include "UIElement.h"
 #include "LayoutContainer.h"
 
 class UIManager {
@@ -11,12 +11,12 @@ class UIManager {
     UIManager() = default;
     ~UIManager() = default;
 
-    void AddPanel(std::shared_ptr<UIPanel> panel);
+    void AddPanel(std::shared_ptr<UIElement> panel);
     void AddLayoutContainer(std::shared_ptr<LayoutContainer> layoutContainer);
     void Render();
 
    private:
-    std::vector<std::shared_ptr<UIPanel>> panels;
+    std::vector<std::shared_ptr<UIElement>> panels;
     std::vector<std::shared_ptr<LayoutContainer>> containers;
 };
 
