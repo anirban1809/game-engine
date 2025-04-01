@@ -20,9 +20,9 @@ class Light {
     void SetColor(glm::vec3 color);
     void SetPosition(glm::vec3 position);
 
-    glm::vec3 GetPosition();
+    glm::vec3& GetPosition();
     float* GetParameterPointer(Parameters parameter);
-    glm::vec3 GetColor();
+    glm::vec3& GetColor();
 
    private:
     glm::vec3 lightColor;

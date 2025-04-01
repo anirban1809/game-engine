@@ -1,13 +1,13 @@
 #include "../../include/Core/Camera.h"
 #include "../../../vendor/glm/gtc/matrix_transform.hpp"
 
-glm::vec3 Camera::GetCameraPosition() { return cameraPosition; }
+glm::vec3& Camera::GetCameraPosition() { return cameraPosition; }
 
-glm::vec3 Camera::GetCameraLook() { return cameraLook; }
+glm::vec3& Camera::GetCameraLook() { return cameraLook; }
 
-glm::mat4 Camera::GetView() { return view; }
+glm::mat4& Camera::GetView() { return view; }
 
-glm::mat4 Camera::GetProjection() { return projection; }
+glm::mat4& Camera::GetProjection() { return projection; }
 
 void Camera::SetCameraPosition(float x, float y, float z) {
     cameraPosition[0] = x;

@@ -6,10 +6,10 @@
 
 class Camera {
    public:
-    glm::vec3 GetCameraPosition();
-    glm::vec3 GetCameraLook();
-    glm::mat4 GetProjection();
-    glm::mat4 GetView();
+    glm::vec3& GetCameraPosition();
+    glm::vec3& GetCameraLook();
+    glm::mat4& GetProjection();
+    glm::mat4& GetView();
 
     void SetCameraPosition(float x, float y, float z);
     void SetCameraLook(float x, float y, float z);

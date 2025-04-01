@@ -14,6 +14,7 @@ class FileSystemItem {
 class FileSystem {
    public:
     std::vector<FileSystemItem> GetItems(const std::string& path);
+    void CreateNewFolder(const std::string& path, std::string& name);
 
    private:
 };

@@ -4,6 +4,7 @@
 #include <iostream>
 
 #include "../../../vendor/glew-2.2.0/include/GL/glew.h"
+#include "../../../vendor/glm/gtc/type_ptr.hpp"
 
 Shader::Shader(const std::string &vertexPath, const std::string &fragmentPath) {
     std::string vertexCode = LoadShaderSource(vertexPath);
@@ -61,4 +62,16 @@ int32 Shader::GetUniformLocation(uint32 programId, const char *uniformName) {
 
 void Shader::SetShaderUniformInt(int32 location, int32 value) {
     glUniform1i(location, value);
+}
+
+void Shader::SetShaderUniformMat4Float(int32 location, glm::mat4 &value) {
+    glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(value));
+}
+
+void Shader::SetShaderUniformVec3Float(int32 location, glm::vec3 &value) {
+    glUniform3fv(location, 1, glm::value_ptr(value));
+}
+
+void Shader::SetShaderUniform3Float(int32 location, float x, float y, float z) {
+    glUniform3f(location, x, y, z);
 }

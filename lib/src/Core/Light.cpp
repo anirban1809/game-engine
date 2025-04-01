@@ -8,7 +8,7 @@ void Light::SetColor(glm::vec3 color) { lightColor = color; }
 
 void Light::SetPosition(glm::vec3 position) { lightPosition = position; }
 
-glm::vec3 Light::GetPosition() { return lightPosition; }
+glm::vec3& Light::GetPosition() { return lightPosition; }
 
 float* Light::GetParameterPointer(Parameters parameter) {
     switch (parameter) {
@@ -24,4 +24,4 @@ float* Light::GetParameterPointer(Parameters parameter) {
     return nullptr;
 }
 
-glm::vec3 Light::GetColor() { return lightColor; }
+glm::vec3& Light::GetColor() { return lightColor; }

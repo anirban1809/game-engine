@@ -116,35 +116,48 @@ void VertexContainer::AttachLight(Light* l) { light = l; }
 void VertexContainer::ApplyTexture(uint32 shaderProgramId, uint32 textureId) {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, textureId);
-    shader->SetShaderUniformInt(
-        shader->GetUniformLocation(shaderProgramId, "texture1"), 0);
+    int32 location = shader->GetUniformLocation(shaderProgramId, "texture1");
+    shader->SetShaderUniformInt(location, 0);
+
     glEnable(GL_DEPTH_TEST);
 
-    glUseProgram(shaderProgramId);
-    glUniform3f(glGetUniformLocation(shaderProgramId, "color"), 0.2f, 0.3f,
-                0.3f);
+    shader->Use();
+    shader->SetShaderUniform3Float(
+        shader->GetUniformLocation(shaderProgramId, "color"), 0.2f, 0.3f, 0.3f);
+
+    // glUniform3f(glGetUniformLocation(shaderProgramId, "color"), 0.2f, 0.3f,
+    //             0.3f);
 
     glm::mat4 model = glm::mat4(1.0f);
 
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgramId, "model"), 1,
-                       GL_FALSE, glm::value_ptr(model));
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgramId, "projection"), 1,
-                       GL_FALSE, glm::value_ptr(camera->GetProjection()));
-    glUniformMatrix4fv(glGetUniformLocation(shaderProgramId, "view"), 1,
-                       GL_FALSE, glm::value_ptr(camera->GetView()));
+    int32 modelUniform = shader->GetUniformLocation(shaderProgramId, "model");
+    int32 projectionUniform =
+        shader->GetUniformLocation(shaderProgramId, "projection");
+    int32 viewUniform = shader->GetUniformLocation(shaderProgramId, "view");
+    int32 viewPosUniform =
+        shader->GetUniformLocation(shaderProgramId, "viewPos");
 
-    glUniform3fv(glGetUniformLocation(shaderProgramId, "viewPos"), 1,
-                 glm::value_ptr(camera->GetCameraPosition()));
+    shader->SetShaderUniformMat4Float(modelUniform, model);
+    shader->SetShaderUniformMat4Float(viewUniform, camera->GetView());
+    shader->SetShaderUniformMat4Float(projectionUniform,
+                                      camera->GetProjection());
 
-    glUniform3fv(glGetUniformLocation(shaderProgramId, "lightPos"), 1,
-                 glm::value_ptr(light->GetPosition()));
-    glUniform3fv(glGetUniformLocation(shaderProgramId, "lightColor"), 1,
-                 glm::value_ptr(light->GetColor()));
+    shader->SetShaderUniformVec3Float(viewPosUniform,
+                                      camera->GetCameraPosition());
 
-    // Set material diffuse color (you can tweak this):
+    int32 lightPosUniform =
+        shader->GetUniformLocation(shaderProgramId, "lightPos");
+    int32 lightColorUniform =
+        shader->GetUniformLocation(shaderProgramId, "lightColor");
+
+    shader->SetShaderUniformVec3Float(lightPosUniform, light->GetPosition());
+    shader->SetShaderUniformVec3Float(lightColorUniform, light->GetColor());
+
     glm::vec3 materialDiffuse(1.0f, 1.0f, 1.0f);
-    glUniform3fv(glGetUniformLocation(shaderProgramId, "diffuseColor"), 1,
-                 glm::value_ptr(materialDiffuse));
+
+    shader->SetShaderUniformVec3Float(
+        shader->GetUniformLocation(shaderProgramId, "diffuseColor"),
+        materialDiffuse);
 }
 
 void VertexContainer::AddObjects(const std::vector<Object>& _objects) {
