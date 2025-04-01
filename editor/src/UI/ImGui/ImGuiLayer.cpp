@@ -4,7 +4,7 @@
 #include <cstdio>
 #include <iostream>
 
-ImGuiLayer::ImGuiLayer(ApplicationState s) { state = s; }
+ImGuiLayer::ImGuiLayer(ApplicationState s) : state(s) {}
 
 void ImGuiLayer::Init(void* windowHandle) {
     window = static_cast<GLFWwindow*>(windowHandle);

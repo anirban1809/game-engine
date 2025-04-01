@@ -36,6 +36,7 @@ void main() {
 
     // Multiply the texture color by the diffuse lighting:
     FragColor = vec4(diffuse + specular, 1.0);
+    // FragColor = vec4(1.0f)
     // FragColor = vec4(norm * 0.5 + 0.5, 1.0);
 
     // // Debug: Visualize normals as colors.

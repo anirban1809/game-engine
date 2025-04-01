@@ -1,279 +1,245 @@
-#include "Core/Application.h"
-#include "Core/Events.h"
-#include "Core/FrameBuffer.h"
-#include "Core/VertexContainer.h"
-#include "Core/Logger.h"
-#include "UI/UIEngine.h"
-#include "UI/ImGui/ImGuiLayer.h"
-#include "UI/ImGui/ImGuiLayoutContainer.h"
-#include "UI/ApplicationState.h"
+#include "Editor.h"
 
 #include "UI/ImGui/Panels/ExamplePanel.h"
 #include "UI/ImGui/Panels/ScenePropsPanel.h"
 #include "UI/ImGui/Panels/NodePropsPanel.h"
 #include "UI/ImGui/Panels/FrameBufferPanel.h"
+#include "UI/ImGui/Panels/FileBrowserPanel.h"
 
-#include <filesystem>
-#include <iostream>
-#include <memory>
+Editor::Editor(int width, int height, const char *title)
+    : Application(width, height, title),
+      state(fs),
+      uiEngine(std::move(std::make_unique<ImGuiLayer>(state))) {}
 
-class Editor : public Application {
-   public:
-    Editor(int width, int height, const char *title)
-        : Application(width, height, title),
-          uiEngine(std::move(std::make_unique<ImGuiLayer>(state))) {}
+void Editor::DefineUI() {
+    std::shared_ptr<ImGuiLayoutContainer> lc =
+        CreateLayoutContainer<ImGuiLayoutContainer>(1, 14);
 
-   protected:
-    VertexContainer *container;
-    Shader *shader;
-    std::vector<float> stage;
-    std::vector<uint32> indices;
-    bool value = false;
-    bool leftMouseDown = false;
-    double lastX = 0.0f;
-    double lastY = 0.0f;
-    bool firstMouse = false;
-    float yaw = -90.0f;  // Initialized so that the initial front is along -Z.
-    float pitch = 0.0f;
-    float mouseSensitivity = 0.1f;
-    float movementSpeed = 1.0f;
-    UIEngine uiEngine;
-    ImGuiLayer *imGuiBackend;
-    FrameBuffer *scenebuffer;
-    ApplicationState state;
-    std::shared_ptr<FramebufferPanel> fbPanel;
+    lc->SetGap(10.0f);
 
-    void DefineUI() {
-        std::shared_ptr<ImGuiLayoutContainer> lc =
-            CreateLayoutContainer<ImGuiLayoutContainer>(1, 13);
+    std::shared_ptr<ImGuiLayoutContainer> lc1 =
+        CreateLayoutContainer<ImGuiLayoutContainer>(2, 1);
+    std::shared_ptr<ImGuiLayoutContainer> lc2 =
+        CreateLayoutContainer<ImGuiLayoutContainer>(1, 1);
+    std::shared_ptr<ImGuiLayoutContainer> lc3 =
+        CreateLayoutContainer<ImGuiLayoutContainer>(1, 1);
 
-        lc->SetGap(10.0f);
+    lc1->AddElement(CreatePanel<ScenePropsPanel>(state), 1);
+    lc1->AddElement(CreatePanel<FileBrowserPanel>(state), 1);
 
-        std::shared_ptr<ImGuiLayoutContainer> lc1 =
-            CreateLayoutContainer<ImGuiLayoutContainer>(2, 1);
-        std::shared_ptr<ImGuiLayoutContainer> lc2 =
-            CreateLayoutContainer<ImGuiLayoutContainer>(1, 1);
-        std::shared_ptr<ImGuiLayoutContainer> lc3 =
-            CreateLayoutContainer<ImGuiLayoutContainer>(1, 1);
+    lc2->AddElement(CreatePanel<FramebufferPanel>("Scene", state, scenebuffer),
+                    1);
+    lc3->AddElement(CreatePanel<NodePropsPanel>(state), 1);
 
-        lc1->AddElement(CreatePanel<ScenePropsPanel>(state), 1);
-        lc1->AddElement(CreatePanel<ExamplePanel>("File Browser", state), 1);
+    lc->AddElement(lc1, 3);
+    lc->AddElement(lc2, 9);
+    lc->AddElement(lc3, 2);
 
-        lc2->AddElement(
-            CreatePanel<FramebufferPanel>("Scene", state, scenebuffer), 1);
-        lc3->AddElement(CreatePanel<NodePropsPanel>(state), 1);
+    uiEngine.GetUIManager().AddLayoutContainer(lc);
+}
 
-        lc->AddElement(lc1, 3);
-        lc->AddElement(lc2, 8);
-        lc->AddElement(lc3, 2);
-
-        uiEngine.GetUIManager().AddLayoutContainer(lc);
+void Editor::OnInit() {
+    scenebuffer = new FrameBuffer(1000.0f, 1000.0f);
+    uiEngine.Init(window->GetGLFWWindow());
+    GLFWmonitor *primary = glfwGetPrimaryMonitor();
+    if (!primary) {
+        std::cerr << "Failed to get primary monitor!" << std::endl;
+        return;
     }
 
-    void OnInit() {
-        scenebuffer = new FrameBuffer(1000.0f, 1000.0f);
-        uiEngine.Init(window->GetGLFWWindow());
-        GLFWmonitor *primary = glfwGetPrimaryMonitor();
-        if (!primary) {
-            std::cerr << "Failed to get primary monitor!" << std::endl;
-            return;
+    // Step 2: Get monitor work area
+    int x, y, width, height;
+    glfwGetMonitorWorkarea(primary, &x, &y, &width, &height);
+
+    // Step 3: Print it
+    std::cout << "Usable screen area: " << width << "x" << height
+              << " at position (" << x << ", " << y << ")" << std::endl;
+
+    DefineUI();
+    state.fs = fs;
+
+    ObjLoader *loader = new ObjLoader();
+
+    loader->LoadObjectFile(
+        "/Users/anirban/Documents/Code/engine/editor/models/"
+        "testscene.obj");
+    loader->LoadMaterialFile(
+        "/Users/anirban/Documents/Code/engine/editor/models/"
+        "testscene.mtl");
+
+    std::vector<float> allvertices;
+    std::vector<uint32> allIndices;
+    for (auto const &object : loader->GetObjects()) {
+        std::vector<float> vertices;
+        for (const auto &[x, y, z, u, v, nx, ny, nz] :
+             object.GetAllVertexData()) {
+            vertices.push_back(x);
+            vertices.push_back(y);
+            vertices.push_back(z);
+            vertices.push_back(u);
+            vertices.push_back(v);
+            vertices.push_back(nx);
+            vertices.push_back(ny);
+            vertices.push_back(nz);
         }
 
-        // Step 2: Get monitor work area
-        int x, y, width, height;
-        glfwGetMonitorWorkarea(primary, &x, &y, &width, &height);
+        allvertices.insert(allvertices.end(), vertices.begin(), vertices.end());
 
-        // Step 3: Print it
-        std::cout << "Usable screen area: " << width << "x" << height
-                  << " at position (" << x << ", " << y << ")" << std::endl;
+        std::vector<uint32> localIndices = object.GetVertexIndices();
 
-        DefineUI();
-
-        ObjLoader *loader = new ObjLoader();
-
-        loader->LoadObjectFile(
-            "/Users/anirban/Documents/Code/engine/editor/models/"
-            "testscene.obj");
-        loader->LoadMaterialFile(
-            "/Users/anirban/Documents/Code/engine/editor/models/"
-            "testscene.mtl");
-
-        std::vector<float> allvertices;
-        std::vector<uint32> allIndices;
-        for (auto const &object : loader->GetObjects()) {
-            std::vector<float> vertices;
-            for (const auto &[x, y, z, u, v, nx, ny, nz] :
-                 object.GetAllVertexData()) {
-                vertices.push_back(x);
-                vertices.push_back(y);
-                vertices.push_back(z);
-                vertices.push_back(u);
-                vertices.push_back(v);
-                vertices.push_back(nx);
-                vertices.push_back(ny);
-                vertices.push_back(nz);
-            }
-
-            allvertices.insert(allvertices.end(), vertices.begin(),
-                               vertices.end());
-
-            std::vector<uint32> localIndices = object.GetVertexIndices();
-
-            for (int i = 0; i < object.GetVertexIndices().size(); i++) {
-                localIndices[i] = localIndices[i] + object.vertexIndexOffset;
-            }
-
-            allIndices.insert(allIndices.end(), localIndices.begin(),
-                              localIndices.end());
+        for (int i = 0; i < object.GetVertexIndices().size(); i++) {
+            localIndices[i] = localIndices[i] + object.vertexIndexOffset;
         }
 
-        Logger::Log(LOG_INFO, "Initializing Application");
-        Logger::Log(LOG_INFO, "Engine Version: 0.0.2 (Feb '25)");
-
-        std::cout << std::filesystem::current_path() << std::endl;
-
-        shader = new Shader(
-            "/Users/anirban/Documents/Code/engine/editor/Shaders/"
-            "vertex_shader.glsl",
-            "/Users/anirban/Documents/Code/engine/editor/Shaders/"
-            "fragment_shader.glsl");
-
-        container = new VertexContainer(shader);
-
-        container->AddObjects(loader->GetObjects());
-
-        container->Init(allvertices, allIndices, shader->GetProgramId());
-        container->Bind();
-
-        camera.SetCameraProjection(45.0f, 1.0f, 0.1f, 1000.0f);
-        camera.SetCameraPosition(0.0f, 100.0f, 100.0f);
-        camera.SetCameraLook(0.0f, 0.0f, 0.0f);
-
-        light.SetColor(glm::vec3(1.0f, 1.0f, 1.0f));
-        light.SetPosition(glm::vec3(0.0, 15.0, 0.0));
-
-        container->AttachCamera(&camera);
-        container->AttachLight(&light);
+        allIndices.insert(allIndices.end(), localIndices.begin(),
+                          localIndices.end());
     }
 
-    void OnKeyPressed(int key) {
-        // Retrieve current camera position and look target.
-        glm::vec3 position = camera.GetCameraPosition();
-        glm::vec3 look = camera.GetCameraLook();
+    Logger::Log(LOG_INFO, "Initializing Application");
+    Logger::Log(LOG_INFO, "Engine Version: 0.0.2 (Feb '25)");
 
-        // Calculate forward vector (direction the camera is facing)
-        glm::vec3 forward = glm::normalize(look - position);
-        // Compute right vector from forward and world up vector.
-        glm::vec3 right =
-            glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
+    std::cout << std::filesystem::current_path() << std::endl;
 
-        if (key == KeyEvent::KEY_W) {
-            std::cout << "Moving Forward" << std::endl;
-            glm::vec3 delta = forward * movementSpeed;
-            camera.SetCameraPosition(position.x + delta.x, position.y + delta.y,
-                                     position.z + delta.z);
-            camera.SetCameraLook(look.x + delta.x, look.y + delta.y,
-                                 look.z + delta.z);
-        }
-        if (key == KeyEvent::KEY_S) {
-            glm::vec3 delta = forward * movementSpeed;
-            camera.SetCameraPosition(position.x - delta.x, position.y - delta.y,
-                                     position.z - delta.z);
-            camera.SetCameraLook(look.x - delta.x, look.y - delta.y,
-                                 look.z - delta.z);
-        }
+    shader = new Shader(
+        "/Users/anirban/Documents/Code/engine/editor/Shaders/"
+        "vertex_shader.glsl",
+        "/Users/anirban/Documents/Code/engine/editor/Shaders/"
+        "fragment_shader.glsl");
 
-        if (key == KeyEvent::KEY_A) {
-            glm::vec3 delta = right * movementSpeed;
-            camera.SetCameraPosition(position.x - delta.x, position.y - delta.y,
-                                     position.z - delta.z);
-            camera.SetCameraLook(look.x - delta.x, look.y - delta.y,
-                                 look.z - delta.z);
-        }
+    container = new VertexContainer(shader);
 
-        if (key == KeyEvent::KEY_D) {
-            glm::vec3 delta = right * movementSpeed;
-            camera.SetCameraPosition(position.x + delta.x, position.y + delta.y,
-                                     position.z + delta.z);
-            camera.SetCameraLook(look.x + delta.x, look.y + delta.y,
-                                 look.z + delta.z);
-        }
+    container->AddObjects(loader->GetObjects());
+
+    container->Init(allvertices, allIndices, shader->GetProgramId());
+    container->Bind();
+
+    camera.SetCameraProjection(45.0f, 1.0f, 0.1f, 1000.0f);
+    camera.SetCameraPosition(0.0f, 100.0f, 100.0f);
+    camera.SetCameraLook(0.0f, 0.0f, 0.0f);
+
+    light.SetColor(glm::vec3(1.0f, 1.0f, 1.0f));
+    light.SetPosition(glm::vec3(0.0, 15.0, 0.0));
+
+    container->AttachCamera(&camera);
+    container->AttachLight(&light);
+}
+
+void Editor::OnKeyPressed(int key) {
+    // Retrieve current camera position and look target.
+    glm::vec3 position = camera.GetCameraPosition();
+    glm::vec3 look = camera.GetCameraLook();
+
+    // Calculate forward vector (direction the camera is facing)
+    glm::vec3 forward = glm::normalize(look - position);
+    // Compute right vector from forward and world up vector.
+    glm::vec3 right =
+        glm::normalize(glm::cross(forward, glm::vec3(0.0f, 1.0f, 0.0f)));
+
+    if (key == KeyEvent::KEY_W) {
+        std::cout << "Moving Forward" << std::endl;
+        glm::vec3 delta = forward * movementSpeed;
+        camera.SetCameraPosition(position.x + delta.x, position.y + delta.y,
+                                 position.z + delta.z);
+        camera.SetCameraLook(look.x + delta.x, look.y + delta.y,
+                             look.z + delta.z);
+    }
+    if (key == KeyEvent::KEY_S) {
+        glm::vec3 delta = forward * movementSpeed;
+        camera.SetCameraPosition(position.x - delta.x, position.y - delta.y,
+                                 position.z - delta.z);
+        camera.SetCameraLook(look.x - delta.x, look.y - delta.y,
+                             look.z - delta.z);
     }
 
-    void OnMousePressed(int button) {
-        if (!state.isFrameBufferPanelHovered) { return; }
-        if (button == MouseEvent::MOUSE_BUTTON_LEFT) {
-            std::cout << "Left mouse button clicked!" << std::endl;
-            leftMouseDown = true;
-            firstMouse = true;
-        }
+    if (key == KeyEvent::KEY_A) {
+        glm::vec3 delta = right * movementSpeed;
+        camera.SetCameraPosition(position.x - delta.x, position.y - delta.y,
+                                 position.z - delta.z);
+        camera.SetCameraLook(look.x - delta.x, look.y - delta.y,
+                             look.z - delta.z);
     }
 
-    void OnMouseReleased(int button) {
-        if (!state.isFrameBufferPanelHovered) { return; }
-        if (button == MouseEvent::MOUSE_BUTTON_LEFT) {
-            std::cout << "Left mouse button released!" << std::endl;
-            leftMouseDown = false;
-        }
+    if (key == KeyEvent::KEY_D) {
+        glm::vec3 delta = right * movementSpeed;
+        camera.SetCameraPosition(position.x + delta.x, position.y + delta.y,
+                                 position.z + delta.z);
+        camera.SetCameraLook(look.x + delta.x, look.y + delta.y,
+                             look.z + delta.z);
     }
+}
 
-    void OnMouseMoved(double xpos, double ypos) {
-        if (!leftMouseDown) { return; }
+void Editor::OnMousePressed(int button) {
+    if (!state.isFrameBufferPanelHovered) { return; }
+    if (button == MouseEvent::MOUSE_BUTTON_LEFT) {
+        std::cout << "Left mouse button clicked!" << std::endl;
+        leftMouseDown = true;
+        firstMouse = true;
+    }
+}
 
-        if (firstMouse) {
-            // On the first mouse event, initialize the last positions.
-            lastX = (float)xpos;
-            lastY = (float)ypos;
-            firstMouse = false;
-            return;
-        }
+void Editor::OnMouseReleased(int button) {
+    if (!state.isFrameBufferPanelHovered) { return; }
+    if (button == MouseEvent::MOUSE_BUTTON_LEFT) {
+        std::cout << "Left mouse button released!" << std::endl;
+        leftMouseDown = false;
+    }
+}
 
-        // Calculate the offset from the last frame.
-        float xoffset = -(float)xpos + lastX;
-        float yoffset =
-            -lastY + (float)ypos;  // reversed: moving up is positive
+void Editor::OnMouseMoved(double xpos, double ypos) {
+    if (!leftMouseDown) { return; }
 
+    if (firstMouse) {
+        // On the first mouse event, initialize the last positions.
         lastX = (float)xpos;
         lastY = (float)ypos;
-
-        // Scale offsets by sensitivity.
-        xoffset *= mouseSensitivity;
-        yoffset *= mouseSensitivity;
-
-        // Update yaw and pitch.
-        yaw += xoffset;
-        pitch += yoffset;
-
-        // Constrain pitch to prevent flipping.
-        if (pitch > 89.0f) pitch = 89.0f;
-        if (pitch < -89.0f) pitch = -89.0f;
-
-        // Compute the new front direction.
-        glm::vec3 front;
-        front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
-        front.y = sin(glm::radians(pitch));
-        front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-        front = glm::normalize(front);
-
-        // Update the camera look target.
-        // (Camera look = camera position + front vector)
-        glm::vec3 newLook = camera.GetCameraPosition() + front;
-        camera.SetCameraLook(newLook.x, newLook.y, newLook.z);
+        firstMouse = false;
+        return;
     }
 
-    void OnUpdate() {}
+    // Calculate the offset from the last frame.
+    float xoffset = -(float)xpos + lastX;
+    float yoffset = -lastY + (float)ypos;  // reversed: moving up is positive
 
-    void OnRender() {
-        scenebuffer->Bind();
-        scenebuffer->Clear();
-        container->Bind();
-        container->Draw(shader->GetProgramId());
-        container->Unbind();
+    lastX = (float)xpos;
+    lastY = (float)ypos;
 
-        scenebuffer->Unbind();
+    // Scale offsets by sensitivity.
+    xoffset *= mouseSensitivity;
+    yoffset *= mouseSensitivity;
 
-        uiEngine.BeginFrame();
-        uiEngine.RenderPanels();
-        uiEngine.EndFrame();
-    }
-};
+    // Update yaw and pitch.
+    yaw += xoffset;
+    pitch += yoffset;
+
+    // Constrain pitch to prevent flipping.
+    if (pitch > 89.0f) pitch = 89.0f;
+    if (pitch < -89.0f) pitch = -89.0f;
+
+    // Compute the new front direction.
+    glm::vec3 front;
+    front.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    front.y = sin(glm::radians(pitch));
+    front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    front = glm::normalize(front);
+
+    // Update the camera look target.
+    // (Camera look = camera position + front vector)
+    glm::vec3 newLook = camera.GetCameraPosition() + front;
+    camera.SetCameraLook(newLook.x, newLook.y, newLook.z);
+}
+
+void Editor::OnUpdate() {}
+
+void Editor::OnRender() {
+    scenebuffer->Bind();
+    scenebuffer->Clear();
+    container->Bind();
+    container->Draw(shader->GetProgramId());
+    container->Unbind();
+
+    scenebuffer->Unbind();
+
+    uiEngine.BeginFrame();
+    uiEngine.RenderPanels();
+    uiEngine.EndFrame();
+}
