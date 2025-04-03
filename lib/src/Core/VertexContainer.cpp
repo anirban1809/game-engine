@@ -8,12 +8,9 @@
  * (EBO). It facilitates indexed rendering by storing vertex and index data
  * efficiently.
  */
-
 #include "../../include/Core/VertexContainer.h"
 #include "../../include/Core/Types.h"
 #include "../../vendor/glew-2.2.0/include/GL/glew.h"
-#include <cstdio>
-#include <iostream>
 #include <vector>
 #include "../../vendor/glm/glm.hpp"
 #include "../../vendor/glm/gtc/matrix_transform.hpp"
@@ -124,9 +121,6 @@ void VertexContainer::ApplyTexture(uint32 shaderProgramId, uint32 textureId) {
     shader->Use();
     shader->SetShaderUniform3Float(
         shader->GetUniformLocation(shaderProgramId, "color"), 0.2f, 0.3f, 0.3f);
-
-    // glUniform3f(glGetUniformLocation(shaderProgramId, "color"), 0.2f, 0.3f,
-    //             0.3f);
 
     glm::mat4 model = glm::mat4(1.0f);
 

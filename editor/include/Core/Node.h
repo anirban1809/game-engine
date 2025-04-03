@@ -2,7 +2,8 @@
 #define __NODE_H__
 
 class Node {
-   public:
+
+public:
 };
 
 #endif  // __NODE_H__

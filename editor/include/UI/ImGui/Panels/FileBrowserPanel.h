@@ -2,7 +2,7 @@
 #define __FILEBROWSERPANEL_H__
 
 #include "../ImGuiPanel.h"
-#include "../../ApplicationState.h"
+#include "UI/ApplicationState.h"
 
 class FileBrowserPanel : public ImGuiPanel {
    public:

@@ -1,5 +1,4 @@
 #include "../../include/UI/LayoutContainer.h"
-#include <iostream>
 
 LayoutContainer::LayoutContainer(int r, int c) {
     rows = r;

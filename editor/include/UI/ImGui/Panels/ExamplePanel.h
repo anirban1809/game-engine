@@ -2,7 +2,6 @@
 #define __EXAMPLEPANEL_H__
 
 #include "../ImGuiPanel.h"
-#include "../ImGuiLayer.h"
 #include "../../ApplicationState.h"
 #include <string>
 
