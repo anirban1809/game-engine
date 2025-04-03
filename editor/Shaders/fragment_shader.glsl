@@ -32,7 +32,7 @@ void main() {
     vec3 specular = spec * specularColor * lightColor;
 
     // Sample the texture
-    vec4 texColor = texture(texture1, TexCoord);
+    // vec4 texColor = texture(texture1, TexCoord);
 
     // Multiply the texture color by the diffuse lighting:
     FragColor = vec4(diffuse + specular, 1.0);

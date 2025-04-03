@@ -77,10 +77,10 @@ void VertexContainer::Init(std::vector<float>& vertexBuffer,
     // order)
     glFrontFace(GL_CCW);
 
-    for (const auto& obj : objects) {
-        textures.push_back(
-            texture->LoadTexture(obj.GetMaterial().diffuseTextureFile));
-    }
+    // for (const auto& obj : objects) {
+    //     textures.push_back(
+    //         texture->LoadTexture(obj.GetMaterial().diffuseTextureFile));
+    // }
 }
 
 /**
@@ -160,13 +160,13 @@ void VertexContainer::AddObjects(const std::vector<Object>& _objects) {
 
 void VertexContainer::Draw(uint32 shaderProgramId) {
     uint32 offset = 0;
-    for (int i = 0; i < objects.size(); i++) {
-        ApplyTexture(shaderProgramId, textures[i]);
-        glDrawElements(GL_TRIANGLES, objects[i].GetVertexIndices().size(),
-                       GL_UNSIGNED_INT, (void*)(offset * sizeof(uint32)));
+    // for (int i = 0; i < objects.size(); i++) {
 
-        offset += objects[i].GetVertexIndices().size();
-    }
+    //     offset += objects[i].GetVertexIndices().size();
+    // }
+
+    ApplyTexture(shaderProgramId, 0);
+    glDrawElements(GL_TRIANGLES, indexSize, GL_UNSIGNED_INT, nullptr);
 }
 
 void VertexContainer::Unbind() const {

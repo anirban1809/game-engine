@@ -1,5 +1,5 @@
-#include "Core/Application.h"
-#include "Core/Events.h"
+#include <Core/Application.h>
+#include <Core/Events.h>
 #include "Core/FrameBuffer.h"
 #include "Core/VertexContainer.h"
 #include "Core/Logger.h"
@@ -49,4 +49,5 @@ class Editor : public Application {
     void OnUpdate();
 
     void OnRender();
+    void OnExit();
 };

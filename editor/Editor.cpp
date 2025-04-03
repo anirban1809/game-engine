@@ -1,12 +1,19 @@
 #include "Editor.h"
 
-#include "UI/ImGui/Panels/ExamplePanel.h"
+#include "Core/Types.h"
 #include "UI/ImGui/Panels/ScenePropsPanel.h"
 #include "UI/ImGui/Panels/NodePropsPanel.h"
 #include "UI/ImGui/Panels/FrameBufferPanel.h"
 #include "UI/ImGui/Panels/FileBrowserPanel.h"
 
-Editor::Editor(int width, int height, const char *title)
+#include "importer.h"
+
+#include <assimp/mesh.h>
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
+Editor::Editor(int width, int height, const char* title)
     : Application(width, height, title),
       state(fs),
       uiEngine(std::move(std::make_unique<ImGuiLayer>(state))) {}
@@ -41,7 +48,7 @@ void Editor::DefineUI() {
 void Editor::OnInit() {
     scenebuffer = new FrameBuffer(1000.0f, 1000.0f);
     uiEngine.Init(window->GetGLFWWindow());
-    GLFWmonitor *primary = glfwGetPrimaryMonitor();
+    GLFWmonitor* primary = glfwGetPrimaryMonitor();
     if (!primary) {
         std::cerr << "Failed to get primary monitor!" << std::endl;
         return;
@@ -57,43 +64,54 @@ void Editor::OnInit() {
 
     DefineUI();
     state.fs = fs;
+    ObjLoader* loader = new ObjLoader();
 
-    ObjLoader *loader = new ObjLoader();
-
-    loader->LoadObjectFile(
-        "/Users/anirban/Documents/Code/engine/editor/models/"
-        "testscene.obj");
-    loader->LoadMaterialFile(
-        "/Users/anirban/Documents/Code/engine/editor/models/"
-        "testscene.mtl");
+    // loader->LoadObjectFile(
+    //     "/Users/anirban/Documents/Code/engine/editor/models/"
+    //     "testscene.obj");
+    // loader->LoadMaterialFile(
+    //     "/Users/anirban/Documents/Code/engine/editor/models/"
+    //     "testscene.mtl");
 
     std::vector<float> allvertices;
     std::vector<uint32> allIndices;
-    for (auto const &object : loader->GetObjects()) {
-        std::vector<float> vertices;
-        for (const auto &[x, y, z, u, v, nx, ny, nz] :
-             object.GetAllVertexData()) {
-            vertices.push_back(x);
-            vertices.push_back(y);
-            vertices.push_back(z);
-            vertices.push_back(u);
-            vertices.push_back(v);
-            vertices.push_back(nx);
-            vertices.push_back(ny);
-            vertices.push_back(nz);
-        }
 
-        allvertices.insert(allvertices.end(), vertices.begin(), vertices.end());
-
-        std::vector<uint32> localIndices = object.GetVertexIndices();
-
-        for (int i = 0; i < object.GetVertexIndices().size(); i++) {
-            localIndices[i] = localIndices[i] + object.vertexIndexOffset;
-        }
-
-        allIndices.insert(allIndices.end(), localIndices.begin(),
-                          localIndices.end());
+    if (Importer::Load("/Users/anirban/Documents/Code/engine/editor/models/"
+                       "RoomScene.obj",
+                       allvertices, allIndices)) {
+        std::cout << "Loaded mesh!" << std::endl;
+        std::cout << "Unique vertices: " << allvertices.size() / 8 << std::endl;
+        std::cout << "Indices: " << allIndices.size() << std::endl;
+    } else {
+        std::cerr << "Failed to load mesh." << std::endl;
     }
+
+    // for (auto const& object : loader->GetObjects()) {
+    //     std::vector<float> vertices;
+    //     for (const auto& [x, y, z, u, v, nx, ny, nz] :
+    //          object.GetAllVertexData()) {
+    //         vertices.push_back(x);
+    //         vertices.push_back(y);
+    //         vertices.push_back(z);
+    //         vertices.push_back(u);
+    //         vertices.push_back(v);
+    //         vertices.push_back(nx);
+    //         vertices.push_back(ny);
+    //         vertices.push_back(nz);
+    //     }
+
+    //     allvertices.insert(allvertices.end(), vertices.begin(),
+    //     vertices.end());
+
+    //     std::vector<uint32> localIndices = object.GetVertexIndices();
+
+    //     for (int i = 0; i < object.GetVertexIndices().size(); i++) {
+    //         localIndices[i] = localIndices[i] + object.vertexIndexOffset;
+    //     }
+
+    //     allIndices.insert(allIndices.end(), localIndices.begin(),
+    //                       localIndices.end());
+    // }
 
     Logger::Log(LOG_INFO, "Initializing Application");
     Logger::Log(LOG_INFO, "Engine Version: 0.0.2 (Feb '25)");

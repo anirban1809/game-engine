@@ -15,9 +15,9 @@ class Application {
     void Run();  // Main loop
 
    protected:
-    virtual void OnInit(){};    // To be overridden for custom initialization
-    virtual void OnUpdate(){};  // Override for updating logic
-    virtual void OnRender(){};  // Override for custom rendering
+    virtual void OnInit() {};    // To be overridden for custom initialization
+    virtual void OnUpdate() {};  // Override for updating logic
+    virtual void OnRender() {};  // Override for custom rendering
     virtual void OnKeyPressed(int key) {}
     virtual void OnMousePressed(int button) {}
     virtual void OnMouseReleased(int button) {}

@@ -1,2 +1,7 @@
 CompileFlags:
+   Add: [
+    "-I./vendor/assimp/include",
+    "-I/usr/local/include",
+    "-std=c++17"
+  ]
   CompilationDatabase: ./build

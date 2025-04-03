@@ -1,7 +1,10 @@
 {
+    "clangd.path":"/usr/bin/clangd",
   "clangd.arguments": [
     "--compile-commands-dir=build",
-    "--header-insertion=never"
+    "--header-insertion=never",
+    
+
   ],
-  "C_Cpp.default.cppStandard": "c++17"  // Optional: fallback for IntelliSense
+"C_Cpp.default.cppStandard": "c++17",
 }
