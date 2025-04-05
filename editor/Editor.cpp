@@ -4,8 +4,8 @@
 #include "UI/ImGui/Panels/ScenePropsPanel.h"
 #include "UI/ImGui/Panels/NodePropsPanel.h"
 #include "UI/ImGui/Panels/FrameBufferPanel.h"
-#include "UI/ImGui/Panels/FileBrowserPanel.h"
-
+#include "UI/ImGui/Panels/AssetLibraryPanel.h"
+#include "UI/ImGui/Panels/LoadObjectPanel.h"
 #include "importer.h"
 
 #include <assimp/mesh.h>
@@ -15,8 +15,8 @@
 
 Editor::Editor(int width, int height, const char* title)
     : Application(width, height, title),
-      state(fs),
-      uiEngine(std::move(std::make_unique<ImGuiLayer>(state))) {}
+      state(fs, assets),
+      uiEngine(std::make_unique<ImGuiLayer>(state)) {}
 
 void Editor::DefineUI() {
     std::shared_ptr<ImGuiLayoutContainer> lc =
@@ -32,7 +32,7 @@ void Editor::DefineUI() {
         CreateLayoutContainer<ImGuiLayoutContainer>(1, 1);
 
     lc1->AddElement(CreatePanel<ScenePropsPanel>(state), 1);
-    lc1->AddElement(CreatePanel<FileBrowserPanel>(state), 1);
+    lc1->AddElement(CreatePanel<AssetLibraryPanel>(state), 1);
 
     lc2->AddElement(CreatePanel<FramebufferPanel>("Scene", state, scenebuffer),
                     1);
@@ -43,6 +43,7 @@ void Editor::DefineUI() {
     lc->AddElement(lc3, 2);
 
     uiEngine.GetUIManager().AddLayoutContainer(lc);
+    uiEngine.GetUIManager().AddPanel(CreatePanel<LoadObjectPanel>(state));
 }
 
 void Editor::OnInit() {
@@ -73,15 +74,15 @@ void Editor::OnInit() {
     //     "/Users/anirban/Documents/Code/engine/editor/models/"
     //     "testscene.mtl");
 
-    std::vector<float> allvertices;
-    std::vector<uint32> allIndices;
+    std::vector<float> vertexArray;
+    std::vector<uint32> indexArray;
 
     if (Importer::Load("/Users/anirban/Documents/Code/engine/editor/models/"
-                       "RoomScene.obj",
-                       allvertices, allIndices)) {
+                       "Chair.obj",
+                       vertexArray, indexArray)) {
         std::cout << "Loaded mesh!" << std::endl;
-        std::cout << "Unique vertices: " << allvertices.size() / 8 << std::endl;
-        std::cout << "Indices: " << allIndices.size() << std::endl;
+        std::cout << "Unique vertices: " << vertexArray.size() / 8 << std::endl;
+        std::cout << "Indices: " << indexArray.size() << std::endl;
     } else {
         std::cerr << "Failed to load mesh." << std::endl;
     }
@@ -113,6 +114,13 @@ void Editor::OnInit() {
     //                       localIndices.end());
     // }
 
+    // std::vector<float> planeVertices = {// positions
+    //                                     -1.0f, 0.0f, -1.0f, 1.0f,  0.0f,
+    //                                     -1.0f, 1.0f,  0.0f, 1.0f,  -1.0f,
+    //                                     0.0f, 1.0f};
+
+    // std::vector<unsigned int> planeIndices = {0, 1, 2, 2, 3, 0};
+
     Logger::Log(LOG_INFO, "Initializing Application");
     Logger::Log(LOG_INFO, "Engine Version: 0.0.2 (Feb '25)");
 
@@ -124,11 +132,24 @@ void Editor::OnInit() {
         "/Users/anirban/Documents/Code/engine/editor/Shaders/"
         "fragment_shader.glsl");
 
-    container = new VertexContainer(shader);
+    Shader* gridShader = new Shader(
+        "/Users/anirban/Documents/Code/engine/editor/Shaders/grid/"
+        "grid_vertex_shader.glsl",
+        "/Users/anirban/Documents/Code/engine/editor/Shaders/grid/"
+        "grid_fragment_shader.glsl");
 
-    container->AddObjects(loader->GetObjects());
+    container = new VertexContainer(shader, gridShader);
 
-    container->Init(allvertices, allIndices, shader->GetProgramId());
+    // container->AddObjects(loader->GetObjects());
+
+    std::vector<float> planeVertices = {// positions
+                                        -1.0f, 0.0f, -1.0f, 1.0f,  0.0f, -1.0f,
+                                        1.0f,  0.0f, 1.0f,  -1.0f, 0.0f, 1.0f};
+
+    std::vector<unsigned int> planeIndices = {0, 1, 2, 2, 3, 0};
+
+    container->Init(vertexArray, indexArray, shader->GetProgramId());
+    container->InitGrid(planeVertices, planeIndices);
     container->Bind();
 
     camera.SetCameraProjection(45.0f, 1.0f, 0.1f, 1000.0f);

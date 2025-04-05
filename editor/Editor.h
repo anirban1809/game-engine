@@ -36,6 +36,7 @@ class Editor : public Application {
     FrameBuffer *scenebuffer;
     ApplicationState state;
     FileSystem fs;
+    std::vector<std::string> assets;
 
     void DefineUI();
 

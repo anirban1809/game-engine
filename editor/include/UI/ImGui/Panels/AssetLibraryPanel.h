@@ -4,15 +4,15 @@
 #include "../ImGuiPanel.h"
 #include "UI/ApplicationState.h"
 
-class FileBrowserPanel : public ImGuiPanel {
+class AssetLibraryPanel : public ImGuiPanel {
    public:
-    FileBrowserPanel(ApplicationState&);
+    AssetLibraryPanel(ApplicationState&);
     void Render();
-    void RenderTree(const std::string& path, const FileSystemItem& item);
 
    private:
     ApplicationState& state;
     std::string current;
+    std::vector<std::string> assets;
 };
 
 #endif  // __FILEBROWSERPANEL_H__

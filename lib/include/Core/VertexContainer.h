@@ -11,11 +11,14 @@
 #include "../../../vendor/glm/glm.hpp"
 class VertexContainer {
    public:
-    VertexContainer(Shader *shader);
+    VertexContainer(Shader *, Shader *);
     ~VertexContainer();
 
     void Init(std::vector<float> &vertexBuffer,
               std::vector<uint32> &indexBuffer, uint32 shaderProgramId);
+
+    void InitGrid(std::vector<float> &vertexBuffer,
+                  std::vector<uint32> &indexBuffer);
 
     void AddObjects(const std::vector<Object> &);
     void UpdateVertexBuffer(const std::vector<float> &vertices, uint32 size);
@@ -32,8 +35,19 @@ class VertexContainer {
     uint32 VAO;
     uint32 VBO;
     uint32 EBO;
+
+    uint32 gridVAO = 0;
+    uint32 gridVBO;
+    uint32 gridEBO;
+
     const float *vertices;
+
+    const float *gridVertices;
+
     uint32 *indices;
+
+    uint32 *gridIndices;
+
     uint32 vertexSize;
     uint32 indexSize;
     Camera *camera;
@@ -42,6 +56,7 @@ class VertexContainer {
     std::vector<uint32> textures;
     std::vector<Object> objects;
     Shader *shader;
+    Shader *gridShader;
 };
 
 #endif  // __VERTEX_H__

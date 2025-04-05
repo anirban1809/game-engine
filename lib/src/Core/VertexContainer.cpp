@@ -11,6 +11,7 @@
 #include "../../include/Core/VertexContainer.h"
 #include "../../include/Core/Types.h"
 #include "../../vendor/glew-2.2.0/include/GL/glew.h"
+#include <iostream>
 #include <vector>
 #include "../../vendor/glm/glm.hpp"
 #include "../../vendor/glm/gtc/matrix_transform.hpp"
@@ -18,7 +19,10 @@
 #include "../../include/Core/Camera.h"
 #include "../../include/Core/Light.h"
 
-VertexContainer::VertexContainer(Shader* _shader) { shader = _shader; }
+VertexContainer::VertexContainer(Shader* _shader, Shader* _gridShader) {
+    shader = _shader;
+    gridShader = _gridShader;
+}
 
 void VertexContainer::Init(std::vector<float>& vertexBuffer,
                            std::vector<uint32>& indexBuffer,
@@ -54,7 +58,7 @@ void VertexContainer::Init(std::vector<float>& vertexBuffer,
                           (void*)0);
     glEnableVertexAttribArray(0);
 
-    // Attribute 1: Texture Coordinates
+    // // Attribute 1: Texture Coordinates
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float),
                           (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
@@ -67,7 +71,7 @@ void VertexContainer::Init(std::vector<float>& vertexBuffer,
     // Unbind the VAO to prevent accidental modifications
     glBindVertexArray(0);
 
-    glActiveTexture(GL_TEXTURE0);
+    // glActiveTexture(GL_TEXTURE0);
 
     // Enable face culling
     glEnable(GL_CULL_FACE);
@@ -81,6 +85,13 @@ void VertexContainer::Init(std::vector<float>& vertexBuffer,
     //     textures.push_back(
     //         texture->LoadTexture(obj.GetMaterial().diffuseTextureFile));
     // }
+}
+
+void VertexContainer::InitGrid(std::vector<float>& vertexBuffer,
+                               std::vector<uint32>& indexBuffer) {
+    glGenVertexArrays(1, &gridVAO);
+    glBindVertexArray(gridVAO);
+    glBindVertexArray(0);
 }
 
 /**
@@ -105,22 +116,72 @@ void VertexContainer::UpdateVertexBuffer(const std::vector<float>& newVertices,
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
-void VertexContainer::Bind() const { glBindVertexArray(VAO); }
+void VertexContainer::Bind() const {}
 
 void VertexContainer::AttachCamera(Camera* cam) { camera = cam; }
 void VertexContainer::AttachLight(Light* l) { light = l; }
 
 void VertexContainer::ApplyTexture(uint32 shaderProgramId, uint32 textureId) {
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, textureId);
-    int32 location = shader->GetUniformLocation(shaderProgramId, "texture1");
-    shader->SetShaderUniformInt(location, 0);
+    gridShader->Use();
 
+    // glm::mat4 gridModel = glm::scale(glm::mat4(1.0f), glm::vec3(1000.0f));
+
+    // gridShader->SetShaderUniformMat4Float(
+    //     gridShader->GetUniformLocation(gridShader->GetProgramId(), "model"),
+    //     gridModel);
+
+    glm::mat4 invView = glm::inverse(camera->GetView());
+    glm::mat4 invProjection = glm::inverse(camera->GetProjection());
+
+    gridShader->SetShaderUniformMat4Float(
+        gridShader->GetUniformLocation(gridShader->GetProgramId(), "invView"),
+        invView);
+
+    gridShader->SetShaderUniformMat4Float(
+        gridShader->GetUniformLocation(gridShader->GetProgramId(),
+                                       "invProjection"),
+        invProjection);
+
+    gridShader->SetShaderUniformVec3Float(
+        gridShader->GetUniformLocation(gridShader->GetProgramId(), "cameraPos"),
+        camera->GetCameraPosition());
+
+    glUniform1f(gridShader->GetUniformLocation(gridShader->GetProgramId(),
+                                               "majorLineSpacing"),
+                1.0f);
+    glUniform1f(gridShader->GetUniformLocation(gridShader->GetProgramId(),
+                                               "minorLineSpacing"),
+                0.1f);
+
+    glm::vec3 gridColor = glm::vec3(0.3f);
+    gridShader->SetShaderUniformVec3Float(
+        gridShader->GetUniformLocation(gridShader->GetProgramId(), "gridColor"),
+        gridColor);
+    // gridShader->Set("minorLineSpacing", 0.1f);
+    // gridShader->setVec3("gridColor", glm::vec3(0.3f));
+
+    glBindVertexArray(gridVAO);
+
+    glDisable(GL_DEPTH_TEST);  // prevent depth from discarding the grid
+    glEnable(GL_BLEND);        // allow the grid to blend over other objects
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+
+    glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
+    glBindVertexArray(0);
+    // glActiveTexture(GL_TEXTURE0);
+    // glBindTexture(GL_TEXTURE_2D, textureId);
+    // int32 location = shader->GetUniformLocation(shaderProgramId,
+    // "texture1"); shader->SetShaderUniformInt(location, 0);
+
+    // glEnable(GL_DEPTH_TEST);
 
     shader->Use();
-    shader->SetShaderUniform3Float(
-        shader->GetUniformLocation(shaderProgramId, "color"), 0.2f, 0.3f, 0.3f);
+    // shader->SetShaderUniform3Float(
+    //     shader->GetUniformLocation(shaderProgramId, "color"), 0.2f, 0.3f,
+    //     0.3f);
 
     glm::mat4 model = glm::mat4(1.0f);
 
@@ -152,6 +213,7 @@ void VertexContainer::ApplyTexture(uint32 shaderProgramId, uint32 textureId) {
     shader->SetShaderUniformVec3Float(
         shader->GetUniformLocation(shaderProgramId, "diffuseColor"),
         materialDiffuse);
+    glBindVertexArray(VAO);
 }
 
 void VertexContainer::AddObjects(const std::vector<Object>& _objects) {

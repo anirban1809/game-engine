@@ -14,7 +14,7 @@ class ImGuiState {
 
 class ImGuiLayer : public UIBackend {
    public:
-    ImGuiLayer(ApplicationState);
+    ImGuiLayer(ApplicationState&);
     void Init(void* windowHandle) override;
     ImGuiIO GetIO();
     void BeginFrame() override;
@@ -24,6 +24,6 @@ class ImGuiLayer : public UIBackend {
    private:
     GLFWwindow* window = nullptr;
     const char* glslVersion = "#version 330";
-    ApplicationState state;
+    ApplicationState& state;
 };
 #endif  // __IMGUILAYER_H__

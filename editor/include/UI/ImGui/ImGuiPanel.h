@@ -13,6 +13,21 @@ class ImGuiPanel : public UIElement {
     virtual ~ImGuiPanel() = default;
     virtual void Render() override = 0;
     void SetPositionAndSize();
+
+    /**
+     * Set the panel size.
+     * **Only for non layout panels.**
+     *
+     */
+    void SetSize(float, float);
+
+    /**
+     * Set the panel position at the center of the viewport.
+     * **Only for non layout panels.**
+     * @param w width of the panel
+     * @param h height of the panel
+     */
+    void CenterPanel(float, float);
 };
 
 #include <memory>
